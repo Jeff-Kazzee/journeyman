@@ -6,3 +6,4 @@ dist/
 .npm-cache/
 *.tsbuildinfo
 build/logs/
+build/tmp/

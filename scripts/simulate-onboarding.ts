@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
-import { ConversationService, chunkTelegramMessage, type AgentRunner } from "../worker/src/conversation.ts";
+import { ConversationService, chunkTelegramMessage, recoverInterruptedConversations, type AgentRunner } from "../worker/src/conversation.ts";
 import { prisma } from "../worker/src/prisma.ts";
 
 const slug = "simulation-onboarding";
 let failNextGap = true;
+let failNextPlan = false;
+const requestedPlanChanges: Array<string | undefined> = [];
 const gaps = {
   summary: "The sample roles consistently ask for accessible product work, practical TypeScript, testing, collaboration, and evidence of shipping.",
   gaps: [
@@ -42,14 +44,40 @@ const plan = {
     },
   ],
 };
-const stubRunner: AgentRunner = async (kind, _prompt, _context, schema) => {
+const stubRunner: AgentRunner = async (kind, _prompt, context, schema) => {
   if (kind === "gap-analysis") { if (failNextGap) { failNextGap = false; throw new Error("simulated Codex failure"); } return schema.parse(gaps); }
-  if (kind === "plan") return schema.parse(plan);
+  if (kind === "plan") { requestedPlanChanges.push(typeof context.requestedChange === "string" ? context.requestedChange : undefined); if (failNextPlan) { failNextPlan = false; throw new Error("simulated plan failure"); } return schema.parse(plan); }
   if (kind === "hint") return schema.parse({ hint: "What evidence in the task flow tells you the keyboard path is actually reachable?" });
   throw new Error(`Unexpected simulated agent kind: ${kind}`);
 };
 const silentMemory = { remember: async (_facts: string[]) => undefined };
 const has = (messages: string[], text: string) => messages.join("\n").includes(text);
+const validPosts = [
+  "Job title: TypeScript developer\nStrong TypeScript skills. Partner with design and product. Build reliable customer experiences with clear state handling, accessible semantic HTML, focused testing, and evidence of incremental work that a reviewer can inspect in a public repository.",
+  "Job title: Accessibility engineer\nBuild accessible interfaces. Show work shipped to users. Collaborate in an async team. Include semantic HTML, keyboard support, testing, and evidence of deliberate accessibility decisions.",
+  "Job title: Front-end tester\nWrite maintainable tests. Use TypeScript to improve an existing product. Explain tradeoffs, collaborate with product partners, and document reliable verification evidence for every release.",
+];
+
+async function verifyBootRecovery(service: ConversationService) {
+  const recoverySlug = `${slug}-recovery`;
+  await prisma.user.deleteMany({ where: { slug: { startsWith: recoverySlug } } });
+  const profile = { goal: "Become an accessible front-end developer.", targetRole: "Front-end developer", background: "Support and HTML experience.", constraints: "6 hours per week", selfAssessedSkills: ["HTML"] };
+  const gapUser = await prisma.user.create({ data: { slug: `${recoverySlug}-gap`, profile: { create: profile }, jobPosts: { create: validPosts.map((rawText) => ({ rawText, parsedSkills: [] })) }, conversationState: { create: { stage: "GAPANALYSIS_RUNNING", data: profile } } } });
+  const planUser = await prisma.user.create({ data: { slug: `${recoverySlug}-plan`, profile: { create: profile }, conversationState: { create: { stage: "PLAN_RUNNING", planRevisionCount: 1, data: { ...profile, gaps, pendingChange: "Make the revision more testing-focused." } } } } });
+  try {
+    assert.equal(await recoverInterruptedConversations([gapUser.id, planUser.id]), 2, "boot sweep must recover both running phases");
+    const [recoveredGap, recoveredPlan] = await Promise.all([prisma.conversationState.findUniqueOrThrow({ where: { userId: gapUser.id } }), prisma.conversationState.findUniqueOrThrow({ where: { userId: planUser.id } })]);
+    assert.equal(recoveredGap.stage, "JOBPOSTS_COLLECTING");
+    assert.equal((recoveredGap.data as { lastFailedRun?: string }).lastFailedRun, "gap-analysis");
+    assert.equal(recoveredPlan.stage, "PLAN_PROPOSED");
+    assert.equal((recoveredPlan.data as { lastFailedRun?: string }).lastFailedRun, "plan");
+    assert(has((await service.handleCommand(gapUser.id, "/retry")).messages, "Your proposed plan"), "boot-recovered gap analysis must retry through plan generation");
+    assert(has((await service.handleCommand(planUser.id, "/retry")).messages, "Your proposed plan"), "boot-recovered plan generation must retry");
+    assert.equal(requestedPlanChanges.at(-1), "Make the revision more testing-focused.", "boot-recovered plan retry must retain its pending change");
+  } finally {
+    await prisma.user.deleteMany({ where: { slug: { startsWith: recoverySlug } } });
+  }
+}
 
 async function main() {
   assert(chunkTelegramMessage("x".repeat(8001)).every((chunk) => chunk.length <= 4000), "outbound messages must be Telegram-safe chunks");
@@ -87,7 +115,7 @@ async function main() {
     const savedPosts = await prisma.jobPost.findMany({ where: { userId: user.id }, orderBy: { createdAt: "asc" } });
     await prisma.jobPost.deleteMany({ where: { id: { in: savedPosts.map((post) => post.id) } } });
     await prisma.jobPost.createMany({ data: [
-      { userId: user.id, rawText: "Job title: TypeScript developer\nStrong TypeScript skills. Partner with design and product. Build reliable customer experiences with clear state handling, accessible semantic HTML, focused testing, and evidence of incremental work that a reviewer can inspect in a public repository.", parsedSkills: [] },
+      { userId: user.id, rawText: validPosts[0], parsedSkills: [] },
       { userId: user.id, rawText: "that was all 5", parsedSkills: [] },
       { userId: user.id, rawText: "noooo", parsedSkills: [] },
     ] });
@@ -96,17 +124,33 @@ async function main() {
     assert.equal(await prisma.jobPost.count({ where: { userId: user.id } }), 1, "retry must clear correction rows before analysis");
 
     await prisma.jobPost.createMany({ data: [
-      { userId: user.id, rawText: "Job title: Accessibility engineer\nBuild accessible interfaces. Show work shipped to users. Collaborate in an async team. Include semantic HTML, keyboard support, testing, and evidence of deliberate accessibility decisions.", parsedSkills: [] },
-      { userId: user.id, rawText: "Job title: Front-end tester\nWrite maintainable tests. Use TypeScript to improve an existing product. Explain tradeoffs, collaborate with product partners, and document reliable verification evidence for every release.", parsedSkills: [] },
+      { userId: user.id, rawText: validPosts[1], parsedSkills: [] },
+      { userId: user.id, rawText: validPosts[2], parsedSkills: [] },
     ] });
     const proposal = await service.handleCommand(user.id, "/done");
     assert(has(proposal.messages, "Your gap analysis"), "fresh valid posts must run the gap analysis");
     assert(has(proposal.messages, "Your proposed plan"), "fresh valid posts must continue through plan generation");
     assert(has(proposal.messages, "Keyboard path: Every control is usable without a mouse."), "plan proposal must render rubric criterion and description lines");
 
+    const revisionChange = "Make the revision more testing-focused.";
+    failNextPlan = true;
+    const failedRevision = await service.handleMessage(user.id, revisionChange);
+    assert(has(failedRevision.messages, gaps.summary), "plan failure must still deliver the saved gaps");
+    assert(has(failedRevision.messages, "Send /retry"), "failed revision must remain retryable");
+    const failedRevisionState = await prisma.conversationState.findUniqueOrThrow({ where: { userId: user.id } });
+    assert.equal((failedRevisionState.data as { pendingChange?: string }).pendingChange, revisionChange, "failed revision must retain the pending change");
+    assert.equal(failedRevisionState.planRevisionCount, 1, "failed revision must retain its revision count");
+    assert(has((await service.handleCommand(user.id, "/retry")).messages, "Your proposed plan"), "failed revision must retry plan generation");
+    assert.equal(requestedPlanChanges.at(-1), revisionChange, "revision retry must pass the retained change to the agent");
+    const retriedRevisionState = await prisma.conversationState.findUniqueOrThrow({ where: { userId: user.id } });
+    assert.equal((retriedRevisionState.data as { pendingChange?: string }).pendingChange, undefined, "successful revision must clear the pending change");
+    assert.equal(retriedRevisionState.planRevisionCount, 1, "successful revision retry must preserve its revision count");
+
+    await verifyBootRecovery(service);
+
     const active = await service.handleMessage(user.id, "confirm");
     assert(has(active.messages, "first task is active now"));
-    const persisted = await prisma.plan.findFirst({ where: { userId: user.id }, include: { milestones: { include: { tasks: true } } } });
+    const persisted = await prisma.plan.findFirst({ where: { userId: user.id }, include: { milestones: { orderBy: { idx: "asc" }, include: { tasks: true } } } });
     assert(persisted, "confirmation must persist a plan");
     assert.deepEqual(persisted.milestones[0]?.rubric, plan.milestones[0].rubric, "milestone rubric must persist as an unchanged array");
     const tasks = persisted.milestones.flatMap((milestone) => milestone.tasks);
