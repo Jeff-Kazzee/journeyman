@@ -1,0 +1,121 @@
+# Journeyman
+
+> **The AI that won’t do your homework.**
+
+Journeyman is an apprenticeship agent for adults changing careers. It handles planning, daily structure, review, and accountability; the learner supplies the practice. Its public transcript is evidence a stranger can inspect, not a portfolio claim.
+
+## Local-first configuration
+
+Journeyman has **no `.env` file**. Configuration comes only from process environment variables: user variables on Windows for local development and the Vercel dashboard for deployment. This prevents credentials from being copied into a repository or an accidental demo bundle.
+
+The database URL is intentionally credential-free. If it is not set, the application defaults to:
+
+```text
+postgresql://postgres@127.0.0.1:5432/journeyman
+```
+
+Set the three user variables once in PowerShell, then open a new terminal:
+
+```powershell
+setx DATABASE_URL "postgresql://postgres@127.0.0.1:5432/journeyman"
+setx TELEGRAM_BOT_TOKEN "paste-the-BotFather-token-here"
+setx SESSION_SECRET "generate-a-long-random-signing-value"
+```
+
+`TELEGRAM_BOT_TOKEN` is required only to start live Telegram polling. `SESSION_SECRET` is required only when completing a browser login. Builds, static demo browsing, and worker dry runs need neither. `APP_TZ` is optional and defaults to `America/Denver`.
+
+## Quickstart (local PostgreSQL 17)
+
+### Prerequisites
+
+- Node.js 24
+- PostgreSQL 17 installed as a Windows service
+- Codex CLI, logged in through ChatGPT (`codex login`)
+- A Telegram bot token from BotFather for live bot use
+- Optional: Bellamente CLI for mentor long-term memory
+
+### One-time database owner setup
+
+Start the installed PostgreSQL 17 service (check its actual service name first):
+
+```powershell
+Get-Service *postgres*
+Start-Service postgresql-x64-17
+```
+
+In PostgreSQL 17’s `pg_hba.conf`, allow trust authentication only on local loopback:
+
+```text
+host    all    all    127.0.0.1/32    trust
+host    all    all    ::1/128         trust
+```
+
+Restart the PostgreSQL service, then create the database:
+
+```powershell
+psql -U postgres -h 127.0.0.1 -d postgres -c "CREATE DATABASE journeyman;"
+```
+
+Install dependencies, generate Prisma, and—only after that admin setup—apply the initial migration:
+
+```powershell
+npm install
+npm run prisma:generate
+npm run prisma:migrate
+```
+
+This repository intentionally does not run migrations automatically.
+
+### Run web and worker
+
+```powershell
+npm run dev
+npm run worker
+```
+
+The worker uses Telegram long-polling. After linking from the web page, send `/start` in Telegram to complete intake, paste 3–5 job posts, and confirm the plan. The first task arrives immediately on confirmation; 07:00 delivery is only for later scheduled tasks. A 19:00 nudge is sent only when an active task has no attempt that day and the learner is not paused. Both schedules use `APP_TZ`. Its env-free smoke test is:
+
+```powershell
+npm run worker -- --dry-run
+```
+
+### Optional Bellamente memory
+
+Bellamente is optional mentor memory, not the source of truth. Start it separately:
+
+```powershell
+bella serve
+npm run memory:check
+```
+
+If it is down, Journeyman continues normally. The worker gives each Bellamente request a 500 ms budget and never sends secrets.
+
+## Judge access
+
+- **Zero setup:** the Vercel deploy serves `/demo` from committed `data/demo-snapshot.json`; it needs no database, process variables, worker, or agent call.
+- **Local live-run (~10 min):** install Node/PostgreSQL, set the three user variables, complete the one-time database owner setup above, then run web and worker with the judge’s own Codex login.
+
+Before publishing a judge build, export Jeff’s real local `demo` user into the committed snapshot:
+
+```powershell
+npm run snapshot
+```
+
+The exporter includes the demo user’s plan, milestones, tasks, reviews, defenses, and transcript entries. `/t/demo` also falls back to that snapshot when local Postgres is offline.
+
+## Architecture
+
+- `app/` — Next.js App Router UI. It reads local PostgreSQL through Prisma and never invokes an agent while rendering.
+- `data/demo-snapshot.json` — committed, database-free judge artifact.
+- `prisma/schema.prisma` — shared PostgreSQL source of truth.
+- `worker/` — grammY long-poll bot, cron scheduler, optional Bellamente adapter, and the sole Codex CLI execution seam.
+- `worker/src/codex.ts` — `runAgent(kind, promptFile, context, schema)` spawns `codex exec` with a JSON output schema, a read-only sandbox by default, one malformed-output retry, Zod validation, and persisted `AgentRun` logs.
+- `prompts/` — versioned prompt-contract boundary for later feature passes.
+
+## How Codex built this
+
+_To be filled at submission with the build narrative, GPT-5.6 integration evidence, and the Codex feedback session ID._
+
+## Third-party software
+
+This project uses Next.js, React, Prisma, Tailwind CSS, grammY, node-cron, Zod, Bellamente (optional local service), and the Codex CLI. Their respective licenses apply.

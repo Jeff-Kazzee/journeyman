@@ -1,0 +1,37 @@
+{
+  "name": "journeyman",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": ["worker"],
+  "scripts": {
+    "dev": "next dev",
+    "build": "npm run worker:check && tsc --noEmit && next build --experimental-build-mode compile",
+    "start": "next start",
+    "worker": "node --experimental-strip-types worker/src/index.ts",
+    "worker:tsx": "tsx worker/src/index.ts",
+    "worker:check": "tsc --project worker/tsconfig.json --noEmit",
+    "memory:check": "node --experimental-strip-types worker/src/index.ts --check",
+    "snapshot": "node --experimental-strip-types scripts/export-demo-snapshot.ts",
+    "simulate:onboarding": "node --no-warnings --experimental-strip-types scripts/simulate-onboarding.ts",
+    "prisma:generate": "prisma generate",
+    "prisma:validate": "prisma validate",
+    "prisma:migrate": "prisma migrate dev"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.10.0",
+    "next": "^15.5.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.5.0",
+    "prisma": "^6.10.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.8.0"
+  }
+}

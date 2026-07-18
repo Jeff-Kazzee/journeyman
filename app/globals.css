@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+
+* { box-sizing: border-box; }
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: #f6f3eb;
+  color: #16251f;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+::selection { background: #cce6bd; color: #16251f; }
+
+a { text-underline-offset: 3px; }
+
+@layer utilities {
+  .font-display { font-family: Georgia, "Times New Roman", serif; }
+  .text-ink { color: #16251f; }
+  .bg-ink { background-color: #16251f; }
+  .text-cream { color: #f6f3eb; }
+  .bg-cream { background-color: #f6f3eb; }
+  .text-forest { color: #274e3d; }
+  .bg-forest { background-color: #274e3d; }
+  .text-moss { color: #557a49; }
+  .border-forest { border-color: #274e3d; }
+}

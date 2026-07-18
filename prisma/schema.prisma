@@ -1,0 +1,321 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PlanStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+enum MilestoneStatus {
+  LOCKED
+  ACTIVE
+  IN_REVIEW
+  COMPLETED
+}
+enum TaskStatus {
+  BACKLOG
+  SCHEDULED
+  ACTIVE
+  BLOCKED
+  COMPLETED
+}
+enum AttemptKind {
+  TEXT
+  LINK
+  COMMIT
+}
+enum DefenseStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+enum TranscriptKind {
+  MILESTONE
+  DEFENSE
+  REVIEW
+  SKILL
+}
+enum MessageChannel {
+  TELEGRAM
+}
+enum OutboundMessageStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+enum AgentRunStatus {
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+enum LoginLinkStatus {
+  PENDING
+  LINKED
+  CONSUMED
+  EXPIRED
+}
+
+enum ConversationStage {
+  IDLE
+  ONBOARDING_GOAL
+  ONBOARDING_ROLE
+  ONBOARDING_BACKGROUND
+  ONBOARDING_CONSTRAINTS
+  ONBOARDING_SKILLS
+  ONBOARDING_CONFIRM
+  JOBPOSTS_COLLECTING
+  GAPANALYSIS_RUNNING
+  PLAN_PROPOSED
+  PLAN_ACTIVE
+}
+
+model User {
+  id                String            @id @default(cuid())
+  slug              String            @unique
+  telegramId        String?           @unique
+  telegramUsername  String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  profile           LearnerProfile?
+  jobPosts          JobPost[]
+  plans             Plan[]
+  attempts          Attempt[]
+  hints             HintEvent[]
+  artifacts         Artifact[]
+  defenses          Defense[]
+  transcriptEntries TranscriptEntry[]
+  outboundMessages  OutboundMessage[]
+  loginLinks        LoginLink[]
+  conversationState ConversationState?
+}
+
+model LearnerProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  goal         String   @db.Text
+  targetRole   String
+  background   String   @db.Text
+  constraints  String?  @db.Text
+  hoursPerWeek        Int?
+  selfAssessedSkills  Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model JobPost {
+  id           String   @id @default(cuid())
+  userId       String
+  url          String?
+  rawText      String   @db.Text
+  parsedSkills Json
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Plan {
+  id         String     @id @default(cuid())
+  userId     String
+  title      String
+  summary    String     @db.Text
+  status     PlanStatus @default(DRAFT)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestones Milestone[]
+
+  @@index([userId, status])
+}
+
+model Milestone {
+  id              String          @id @default(cuid())
+  planId          String
+  idx             Int
+  title           String
+  description     String          @db.Text
+  deliverableSpec String          @db.Text
+  rubric          Json
+  status          MilestoneStatus @default(LOCKED)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  plan            Plan            @relation(fields: [planId], references: [id], onDelete: Cascade)
+  tasks           Task[]
+  defenses        Defense[]
+
+  @@unique([planId, idx])
+}
+
+model Task {
+  id              String     @id @default(cuid())
+  milestoneId     String
+  idx             Int
+  title           String
+  brief           String     @db.Text
+  deliverableSpec String     @db.Text
+  whyItMatters    String?    @db.Text
+  status          TaskStatus @default(BACKLOG)
+  assignedAt      DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  milestone       Milestone  @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+  attempts        Attempt[]
+  hints           HintEvent[]
+  artifacts       Artifact[]
+
+  @@unique([milestoneId, idx])
+  @@index([status, assignedAt])
+}
+
+model ConversationState {
+  id                String            @id @default(cuid())
+  userId            String            @unique
+  stage             ConversationStage @default(IDLE)
+  data              Json
+  planRevisionCount Int               @default(0)
+  pausedAt          DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([stage, pausedAt])
+}
+model Attempt {
+  id         String      @id @default(cuid())
+  taskId     String
+  userId     String
+  kind       AttemptKind
+  content    String      @db.Text
+  createdAt  DateTime    @default(now())
+  task       Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hintEvents HintEvent[]
+
+  @@index([taskId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model HintEvent {
+  id        String   @id @default(cuid())
+  taskId    String
+  userId    String
+  level     Int
+  content   String   @db.Text
+  attemptId String
+  createdAt DateTime @default(now())
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  attempt   Attempt  @relation(fields: [attemptId], references: [id], onDelete: Restrict)
+
+  @@index([taskId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model Artifact {
+  id        String    @id @default(cuid())
+  userId    String
+  taskId    String?
+  repoUrl   String
+  ref       String?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task      Task?     @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  reviews   Review[]
+
+  @@index([userId, createdAt])
+  @@index([taskId])
+}
+
+model Review {
+  id           String   @id @default(cuid())
+  artifactId   String
+  engine       String
+  summary      String   @db.Text
+  rubricScores Json
+  forensics    Json
+  rawLog       String   @db.Text
+  createdAt    DateTime @default(now())
+  artifact     Artifact @relation(fields: [artifactId], references: [id], onDelete: Cascade)
+
+  @@index([artifactId, createdAt])
+}
+
+model Defense {
+  id           String        @id @default(cuid())
+  userId       String
+  milestoneId  String
+  status       DefenseStatus @default(PENDING)
+  qaTranscript Json
+  scores       Json
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestone    Milestone     @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([milestoneId, createdAt])
+}
+
+model TranscriptEntry {
+  id        String         @id @default(cuid())
+  userId    String
+  kind      TranscriptKind
+  title     String
+  body      String         @db.Text
+  evidence  Json
+  createdAt DateTime       @default(now())
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model OutboundMessage {
+  id        String                @id @default(cuid())
+  userId    String
+  channel   MessageChannel
+  body      String                @db.Text
+  status    OutboundMessageStatus @default(QUEUED)
+  sentAt    DateTime?
+  createdAt DateTime              @default(now())
+  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status, createdAt])
+}
+
+model AgentRun {
+  id            String         @id @default(cuid())
+  kind          String
+  inputRef      String
+  promptVersion String
+  status        AgentRunStatus @default(RUNNING)
+  output        Json?
+  rawLog        String?        @db.Text
+  startedAt     DateTime       @default(now())
+  finishedAt    DateTime?
+
+  @@index([kind, startedAt])
+}
+
+// A browser creates this row; Telegram attaches a user; the browser consumes it.
+model LoginLink {
+  id         String          @id @default(cuid())
+  code       String          @unique
+  userId     String?
+  status     LoginLinkStatus @default(PENDING)
+  expiresAt  DateTime
+  linkedAt   DateTime?
+  consumedAt DateTime?
+  createdAt  DateTime        @default(now())
+  user       User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status, expiresAt])
+}
