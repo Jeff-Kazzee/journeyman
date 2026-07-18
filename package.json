@@ -14,6 +14,8 @@
     "memory:check": "node --experimental-strip-types worker/src/index.ts --check",
     "snapshot": "node --experimental-strip-types scripts/export-demo-snapshot.ts",
     "simulate:onboarding": "node --no-warnings --experimental-strip-types scripts/simulate-onboarding.ts",
+    "agent:smoke": "node --no-warnings --experimental-strip-types scripts/agent-smoke.ts",
+    "stop": "node -e \"if(process.platform===\u0027win32\u0027)require(\u0027node:child_process\u0027).execFileSync(\u0027powershell.exe\u0027,[\u0027-NoProfile\u0027,\u0027-ExecutionPolicy\u0027,\u0027Bypass\u0027,\u0027-File\u0027,\u0027scripts/stop.ps1\u0027],{stdio:\u0027inherit\u0027})\"",
     "prisma:generate": "prisma generate",
     "prisma:validate": "prisma validate",
     "prisma:migrate": "prisma migrate dev"

@@ -1,0 +1,1 @@
+if ($env:OS -eq 'Windows_NT') { $repo = (Get-Location).Path; Get-CimInstance Win32_Process -Filter "Name = 'node.exe'" | Where-Object { $_.CommandLine -like "*$repo*" } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force } }

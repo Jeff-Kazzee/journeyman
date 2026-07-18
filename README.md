@@ -79,6 +79,18 @@ The worker uses Telegram long-polling. After linking from the web page, send `/s
 npm run worker -- --dry-run
 ```
 
+### Codex smoke and safe worker restart
+
+A live worker boot logs `codex: resolved <path>` before it starts Telegram polling. To verify a real, structured `codex exec` round-trip and its persisted `AgentRun`, run this intentionally token-consuming check once:
+
+```powershell
+npm run agent:smoke
+```
+
+To reload the worker after source changes, `npm run stop` stops only Node processes whose command line references this repository; it is a no-op off Windows. Then start the worker again with `npm run worker`.
+
+If a worker restart finds an existing profile, `/start` offers `resume` (fresh job posts) or `restart` (redo intake). A failed agent step preserves state and can be rerun with `/retry`.
+
 ### Optional Bellamente memory
 
 Bellamente is optional mentor memory, not the source of truth. Start it separately:
