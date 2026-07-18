@@ -20,7 +20,10 @@ const plan = {
   milestones: [
     {
       title: "Ship an accessible task flow", description: "Create a focused user-facing task flow with keyboard and screen-reader support.", deliverableSpec: "A public repository with a deployed accessible task flow and a concise README.",
-      rubric: { "Keyboard path": "Every control is usable without a mouse.", "Semantic structure": "Landmarks and labels describe the flow." },
+      rubric: [
+        { criterion: "Keyboard path", description: "Every control is usable without a mouse." },
+        { criterion: "Semantic structure", description: "Landmarks and labels describe the flow." },
+      ],
       tasks: [
         { title: "Map the task flow", brief: "Sketch the smallest user path and its states.", deliverableSpec: "A short Markdown flow map committed to the repository.", whyItMatters: "Clear states make the later interface easier to build and defend." },
         { title: "Build the first accessible screen", brief: "Implement one semantic, keyboard-usable screen from the map.", deliverableSpec: "A committed screen with labels, focus order, and a manual keyboard note.", whyItMatters: "It turns accessibility from a claim into inspectable work." },
@@ -28,7 +31,10 @@ const plan = {
     },
     {
       title: "Verify and explain the work", description: "Add checks and a readable explanation of decisions.", deliverableSpec: "Tests plus a short decision log linked from the README.",
-      rubric: { "Regression coverage": "The key path has a repeatable check.", "Decision evidence": "The README explains tradeoffs in the learner’s own words." },
+      rubric: [
+        { criterion: "Regression coverage", description: "The key path has a repeatable check." },
+        { criterion: "Decision evidence", description: "The README explains tradeoffs in the learner’s own words." },
+      ],
       tasks: [
         { title: "Add a focused check", brief: "Choose one failure worth preventing and write a check for it.", deliverableSpec: "A passing test or documented manual verification step.", whyItMatters: "Reliable work is easier to extend and review." },
         { title: "Write the decision log", brief: "Explain one accessibility decision and one tradeoff.", deliverableSpec: "A concise README section with evidence links.", whyItMatters: "A reviewer can inspect your reasoning, not just the finished screen." },
@@ -96,11 +102,13 @@ async function main() {
     const proposal = await service.handleCommand(user.id, "/done");
     assert(has(proposal.messages, "Your gap analysis"), "fresh valid posts must run the gap analysis");
     assert(has(proposal.messages, "Your proposed plan"), "fresh valid posts must continue through plan generation");
+    assert(has(proposal.messages, "Keyboard path: Every control is usable without a mouse."), "plan proposal must render rubric criterion and description lines");
 
     const active = await service.handleMessage(user.id, "confirm");
     assert(has(active.messages, "first task is active now"));
     const persisted = await prisma.plan.findFirst({ where: { userId: user.id }, include: { milestones: { include: { tasks: true } } } });
     assert(persisted, "confirmation must persist a plan");
+    assert.deepEqual(persisted.milestones[0]?.rubric, plan.milestones[0].rubric, "milestone rubric must persist as an unchanged array");
     const tasks = persisted.milestones.flatMap((milestone) => milestone.tasks);
     assert.equal(tasks.filter((task) => task.status === "ACTIVE").length, 1);
     assert.equal(tasks.filter((task) => task.status === "SCHEDULED").length, tasks.length - 1);

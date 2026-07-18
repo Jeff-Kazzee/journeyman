@@ -21,7 +21,7 @@ export const planSchema = z.object({
   title: z.string().min(1), summary: z.string().min(1),
   milestones: z.array(z.object({
     title: z.string().min(1), description: z.string().min(1), deliverableSpec: z.string().min(1),
-    rubric: z.record(z.string().min(1), z.string().min(1)).refine((rubric) => Object.keys(rubric).length > 0),
+    rubric: z.array(z.object({ criterion: z.string().min(1), description: z.string().min(1) }).strict()).min(1),
     tasks: z.array(z.object({ title: z.string().min(1), brief: z.string().min(1), deliverableSpec: z.string().min(1), whyItMatters: z.string().min(1) }).strict()).min(2).max(6),
   }).strict()).min(2).max(4),
 }).strict();
@@ -69,7 +69,7 @@ function profileForAgent(profile: LearnerProfile, data: Data) { return { goal: p
 function profileFacts(data: Data): string[] { return [`Journeyman learner goal: ${data.goal ?? "Unknown"}`, `Target role: ${data.targetRole ?? "Unknown"}`, `Background: ${data.background ?? "Unknown"}`, `Constraints: ${data.constraints ?? "Unknown"}`, `Self-assessed skills: ${(data.selfAssessedSkills ?? []).join(", ") || "Unknown"}`]; }
 function profileSummary(data: Data): string { return ["Here’s what I heard:", "", `Goal: ${data.goal ?? "—"}`, `Target role: ${data.targetRole ?? "—"}`, `Background: ${data.background ?? "—"}`, `Constraints: ${data.constraints ?? "—"}`, `Self-assessed skills: ${(data.selfAssessedSkills ?? []).join(", ") || "—"}`, "", "Reply confirm to save this, or /cancel to start over."].join("\n"); }
 function gapsText(gaps: GapAnalysis): string { return ["Your gap analysis", "", gaps.summary, "", ...gaps.gaps.sort((a, b) => a.rank - b.rank).map((gap) => `${gap.rank}. ${gap.skill}\n${gap.whyItMatters}\nEvidence: ${gap.evidenceQuotes.map((quote) => `“${quote.quote}” (post ${quote.jobPostIndex + 1})`).join("; ")}`)].join("\n\n"); }
-function planText(plan: ProposedPlan): string { return ["Your proposed plan", "", plan.title, plan.summary, "", ...plan.milestones.map((milestone, index) => [`${index + 1}. ${milestone.title}`, milestone.description, `Deliverable: ${milestone.deliverableSpec}`, `Review rubric: ${Object.entries(milestone.rubric).map(([k, v]) => `${k} — ${v}`).join("; ")}`, "Tasks:", ...milestone.tasks.map((task, taskIndex) => `  ${taskIndex + 1}. ${task.title} — ${task.brief}`)].join("\n")), "", "Reply confirm to activate it, or send one change you want. I can revise it once before we lock it in."].join("\n\n"); }
+function planText(plan: ProposedPlan): string { return ["Your proposed plan", "", plan.title, plan.summary, "", ...plan.milestones.map((milestone, index) => [`${index + 1}. ${milestone.title}`, milestone.description, `Deliverable: ${milestone.deliverableSpec}`, "Review rubric:", ...milestone.rubric.map((item) => `  ${item.criterion}: ${item.description}`), "Tasks:", ...milestone.tasks.map((task, taskIndex) => `  ${taskIndex + 1}. ${task.title} — ${task.brief}`)].join("\n")), "", "Reply confirm to activate it, or send one change you want. I can revise it once before we lock it in."].join("\n\n"); }
 function privateAddress(address: string): boolean {
   if (isIP(address) === 4) { const [a, b] = address.split(".").map(Number); return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168); }
   const value = address.toLowerCase(); return value === "::" || value === "::1" || value.startsWith("fe80:") || value.startsWith("fc") || value.startsWith("fd");
