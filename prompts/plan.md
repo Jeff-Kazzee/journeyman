@@ -13,4 +13,4 @@ Turn the supplied learner profile and evidence-backed gaps into a plan that prod
 
 ## JSON contract
 
-Return an object with `title`, `summary`, and `milestones`. Each milestone has `title`, `description`, `deliverableSpec`, `rubric` (a string-to-string object of observable criteria), and `tasks`. Each task has `title`, `brief`, `deliverableSpec`, and `whyItMatters`. Return no prose outside JSON.
+Return an object with `title`, `summary`, and `milestones`. Each milestone has `title`, `description`, `deliverableSpec`, `rubric` (an array of `{criterion, description}` objects with observable criteria), and `tasks`. Each task has `title`, `brief`, `deliverableSpec`, and `whyItMatters`. Return no prose outside JSON.
