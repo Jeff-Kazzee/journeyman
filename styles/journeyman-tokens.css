@@ -1,0 +1,58 @@
+:root {
+  --jm-ink-950: #0e1116;
+  --jm-ink-900: #151a21;
+  --jm-ink-850: #1b2129;
+  --jm-ink-800: #232b35;
+  --jm-parchment-50: #fbf5e9;
+  --jm-parchment-100: #f3ead9;
+  --jm-parchment-300: #d4c8b5;
+  --jm-slate-300: #a9b2bf;
+  --jm-slate-500: #8995a5;
+  --jm-amber-300: #f6ca70;
+  --jm-amber-500: #dfa33f;
+  --jm-amber-700: #9a6420;
+  --jm-espresso-700: #3b2721;
+  --jm-cream-100: #fff3de;
+  --jm-rust-500: #e18b68;
+  --jm-teal-400: #69aaa1;
+  --jm-positive-400: #79b889;
+  --jm-danger-400: #df816e;
+
+  /* RGB channels keep transparent variants tied to the same palette source. */
+  --jm-rgb-ink-950: 14 17 22;
+  --jm-rgb-ink-900: 21 26 33;
+  --jm-rgb-ink-850: 27 33 41;
+  --jm-rgb-ink-800: 35 43 53;
+  --jm-rgb-parchment-100: 243 234 217;
+  --jm-rgb-amber-500: 223 163 63;
+  --jm-rgb-espresso-700: 59 39 33;
+  --jm-rgb-rust-500: 225 139 104;
+  --jm-rgb-teal-400: 105 170 161;
+
+  --jm-font-display: "Space Grotesk Variable", "Segoe UI", Arial, sans-serif;
+  --jm-font-serif: "Fraunces Variable", Georgia, "Times New Roman", serif;
+  --jm-font-body: "Inter Variable", Inter, Arial, sans-serif;
+  --jm-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+
+  --jm-space-1: 0.25rem;
+  --jm-space-2: 0.5rem;
+  --jm-space-3: 0.75rem;
+  --jm-space-4: 1rem;
+  --jm-space-5: 1.25rem;
+  --jm-space-6: 1.5rem;
+  --jm-space-8: 2rem;
+  --jm-space-10: 2.5rem;
+  --jm-space-12: 3rem;
+  --jm-space-16: 4rem;
+  --jm-space-20: 5rem;
+  --jm-space-24: 6rem;
+  --jm-space-32: 8rem;
+
+  --jm-radius-sm: 0.5rem;
+  --jm-radius-md: 0.85rem;
+  --jm-radius-lg: 1.25rem;
+  --jm-radius-xl: 1.75rem;
+  --jm-shadow-panel: 0 24px 70px rgb(0 0 0 / 0.24);
+  --jm-focus-ring: 0 0 0 3px var(--jm-ink-950), 0 0 0 6px var(--jm-amber-300);
+  --jm-content: 74rem;
+}
