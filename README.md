@@ -129,7 +129,23 @@ The exporter includes the demo user’s plan, milestones, tasks, reviews, defens
 
 ## How Codex built this
 
-_To be filled at submission with the build narrative, GPT-5.6 integration evidence, and the Codex feedback session ID._
+Every line of product code in this repository was written by OpenAI Codex, directed through bounded passes on one primary build thread that was resumed throughout with `codex exec resume`. A pass is: a written brief stating scope, constraints, and pass/fail gates; an isolated execution with workspace-write sandboxing; a written result report; and independent verification of the gates before the pass counts. Twelve passes shipped the product. Every brief and every result report is committed in [`build/`](build/), including the passes where things went sideways (schema truncation, structured-output rejections, an error-masking wrapper) and how they were diagnosed.
+
+Claude acted as tech lead: writing pass briefs, reviewing diffs, driving scripted end-to-end runs against the real system, and running multi-lens adversarial reviews on every pull request before merge (see PRs #1, #3, #4, #6). The public site's visual design was hand-finished; the machinery beneath it was not.
+
+### Where GPT-5.6 runs in the product
+
+All mentor reasoning is GPT-5.6 via the Codex CLI, authenticated with the user's own login:
+
+- Gap analysis, plan generation, the five-level hint ladder, and defense evaluation each run through `worker/src/codex.ts` — the single execution seam, which spawns `codex exec` with a JSON output schema, a read-only default sandbox, Zod validation, one malformed-output retry, and a persisted `AgentRun` forensic log per invocation.
+- The refusal gate is deliberately *not* a model call: it is an auditable classifier in ordinary code, so refusals are instant, free, and immune to prompt injection. Everything past the gate is GPT-5.6.
+- Prompt contracts live in [`prompts/`](prompts/), one file per agent task.
+
+### Collaboration evidence
+
+- Pass briefs and results: [`build/`](build/)
+- Adversarially reviewed merges: [PR #1](https://github.com/Jeff-Kazzee/journeyman/pull/1), [#3](https://github.com/Jeff-Kazzee/journeyman/pull/3), [#4](https://github.com/Jeff-Kazzee/journeyman/pull/4), [#6](https://github.com/Jeff-Kazzee/journeyman/pull/6)
+- Codex `/feedback` Session ID: _added at submission_
 
 ## Third-party software
 
