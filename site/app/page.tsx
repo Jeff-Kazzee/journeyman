@@ -31,7 +31,7 @@ export default function HomePage() {
               {featuredAttempt ? <div className="chat-message learner"><span>You · the real attempt</span><p>{featuredAttempt.content}</p></div> : null}
               {featuredHint ? <div className="chat-message mentor hint"><span>Journeyman · level {featuredHint.level}/5 hint · earned</span><p>{featuredHint.content}</p></div> : null}
             </div>
-            <p className="chat-footnote">Every message above is verbatim from a real session with the demo learner—the refusal is replayed (refusals are never stored, by design); the attempt and hint render from the committed snapshot.</p>
+            <p className="chat-footnote">Assembled from the demo learner's real session, abridged: the attempt and hint are persisted records rendered from the committed snapshot; the cold ask and refusal are reconstructed exactly as the session played them, because refusals are never stored, by design. The full unabridged exchange is on the transcript page.</p>
           </div>
         </div>
       </section>
