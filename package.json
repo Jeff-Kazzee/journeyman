@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "workspaces": ["worker"],
+  "workspaces": [
+    "worker"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "npm run worker:check && tsc --noEmit && next build --experimental-build-mode compile",
@@ -13,15 +15,20 @@
     "worker:check": "tsc --project worker/tsconfig.json --noEmit",
     "memory:check": "node --experimental-strip-types worker/src/index.ts --check",
     "snapshot": "node --experimental-strip-types scripts/export-demo-snapshot.ts",
+    "site:check": "node --experimental-strip-types scripts/check-site-links.ts site/out",
+    "site:build": "node --require ./scripts/next-thread-worker-sanitize.cjs ./node_modules/next/dist/bin/next build site && npm run site:check",
     "simulate:onboarding": "node --no-warnings --experimental-strip-types scripts/simulate-onboarding.ts",
     "verify:plan": "node --experimental-strip-types scripts/verify-plan-run.ts",
     "agent:smoke": "node --no-warnings --experimental-strip-types scripts/agent-smoke.ts",
-    "stop": "node -e \"if(process.platform===\u0027win32\u0027)require(\u0027node:child_process\u0027).execFileSync(\u0027powershell.exe\u0027,[\u0027-NoProfile\u0027,\u0027-ExecutionPolicy\u0027,\u0027Bypass\u0027,\u0027-File\u0027,\u0027scripts/stop.ps1\u0027],{stdio:\u0027inherit\u0027})\"",
+    "stop": "node -e \"if(process.platform==='win32')require('node:child_process').execFileSync('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File','scripts/stop.ps1'],{stdio:'inherit'})\"",
     "prisma:generate": "prisma generate",
     "prisma:validate": "prisma validate",
     "prisma:migrate": "prisma migrate dev"
   },
   "dependencies": {
+    "@fontsource-variable/fraunces": "^5.2.9",
+    "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource-variable/space-grotesk": "^5.2.10",
     "@prisma/client": "^6.10.0",
     "next": "^15.5.0",
     "react": "^19.1.0",

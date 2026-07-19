@@ -6,19 +6,44 @@ import type { DemoSnapshot } from "../lib/demo-snapshot.ts";
 const databaseUrl = process.env.DATABASE_URL ?? "postgresql://postgres@127.0.0.1:5432/journeyman";
 const prisma = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
 
+function exportedGapAnalysis(data: unknown): DemoSnapshot["gapAnalysis"] {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return null;
+  const candidate = (data as { gaps?: unknown }).gaps;
+  if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return null;
+  const value = candidate as { summary?: unknown; gaps?: unknown };
+  if (typeof value.summary !== "string" || !Array.isArray(value.gaps)) return null;
+  const gaps = value.gaps.flatMap((gap) => {
+    if (!gap || typeof gap !== "object" || Array.isArray(gap)) return [];
+    const item = gap as { skill?: unknown; whyItMatters?: unknown; rank?: unknown; evidenceQuotes?: unknown };
+    if (typeof item.skill !== "string" || typeof item.whyItMatters !== "string" || typeof item.rank !== "number" || !Array.isArray(item.evidenceQuotes)) return [];
+    const evidenceQuotes = item.evidenceQuotes.flatMap((evidence) => {
+      if (!evidence || typeof evidence !== "object" || Array.isArray(evidence)) return [];
+      const quote = evidence as { quote?: unknown; jobPostIndex?: unknown };
+      return typeof quote.quote === "string" && typeof quote.jobPostIndex === "number" ? [{ quote: quote.quote, jobPostIndex: quote.jobPostIndex }] : [];
+    });
+    return [{ skill: item.skill, whyItMatters: item.whyItMatters, rank: item.rank, evidenceQuotes }];
+  });
+  return gaps.length ? { summary: value.summary, gaps } : null;
+}
+
 async function main() {
+  const activePlan = await prisma.plan.findFirst({ where: { status: "ACTIVE" }, orderBy: { updatedAt: "desc" }, select: { id: true, userId: true } });
   const user = await prisma.user.findUnique({
-    where: { slug: "demo" },
+    where: activePlan ? { id: activePlan.userId } : { slug: "demo" },
     include: {
       profile: true,
+      conversationState: { select: { data: true } },
       plans: {
+        ...(activePlan ? { where: { id: activePlan.id } } : {}),
         orderBy: { createdAt: "desc" },
         take: 1,
         include: { milestones: { orderBy: { idx: "asc" }, include: { tasks: { orderBy: { idx: "asc" } } } } },
       },
       artifacts: { include: { reviews: { orderBy: { createdAt: "desc" } } } },
       defenses: { orderBy: { createdAt: "desc" } },
-      transcriptEntries: { orderBy: { createdAt: "desc" } },
+      attempts: { orderBy: { createdAt: "asc" }, include: { task: { select: { title: true } } } },
+      hints: { orderBy: { createdAt: "asc" }, include: { task: { select: { title: true } } } },
+      transcriptEntries: { orderBy: { createdAt: "asc" } },
     },
   });
 
@@ -27,7 +52,8 @@ async function main() {
     version: 1,
     generatedAt: new Date().toISOString(),
     user: user ? {
-      slug: user.slug,
+      // Preserve the exporter's public demo alias; never publish a transport-derived user slug.
+      slug: "demo",
       createdAt: user.createdAt.toISOString(),
       profile: user.profile ? { goal: user.profile.goal, targetRole: user.profile.targetRole } : null,
     } : null,
@@ -50,12 +76,14 @@ async function main() {
           title: task.title,
           brief: task.brief,
           deliverableSpec: task.deliverableSpec,
+          whyItMatters: task.whyItMatters,
           status: task.status,
           assignedAt: task.assignedAt?.toISOString() ?? null,
           completedAt: task.completedAt?.toISOString() ?? null,
         })),
       })),
     } : null,
+    gapAnalysis: exportedGapAnalysis(user?.conversationState?.data),
     reviews: user?.artifacts.flatMap((artifact) => artifact.reviews.map((review) => ({
       id: review.id,
       artifactId: review.artifactId,
@@ -74,6 +102,23 @@ async function main() {
       scores: defense.scores,
       createdAt: defense.createdAt.toISOString(),
     })) ?? [],
+    attempts: user?.attempts.map((attempt) => ({
+      id: attempt.id,
+      taskId: attempt.taskId,
+      taskTitle: attempt.task.title,
+      kind: attempt.kind,
+      content: attempt.content,
+      createdAt: attempt.createdAt.toISOString(),
+    })) ?? [],
+    hints: user?.hints.map((hint) => ({
+      id: hint.id,
+      taskId: hint.taskId,
+      taskTitle: hint.task.title,
+      attemptId: hint.attemptId,
+      level: hint.level,
+      content: hint.content,
+      createdAt: hint.createdAt.toISOString(),
+    })) ?? [],
     transcriptEntries: user?.transcriptEntries.map((entry) => ({
       id: entry.id,
       kind: entry.kind,
@@ -87,7 +132,9 @@ async function main() {
   const destination = path.join(process.cwd(), "data", "demo-snapshot.json");
   await mkdir(path.dirname(destination), { recursive: true });
   await writeFile(destination, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8");
-  console.log(`Wrote ${destination} (${snapshot.transcriptEntries.length} transcript entries).`);
+  const milestoneCount = snapshot.plan?.milestones.length ?? 0;
+  const taskCount = snapshot.plan?.milestones.reduce((total, milestone) => total + milestone.tasks.length, 0) ?? 0;
+  console.log(`Wrote ${destination}: ${milestoneCount} milestones, ${taskCount} tasks, ${snapshot.attempts.length} attempts, ${snapshot.hints.length} hints, ${snapshot.transcriptEntries.length} transcript entries.`);
 }
 
 main()

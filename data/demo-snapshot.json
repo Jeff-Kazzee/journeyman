@@ -1,9 +1,506 @@
 {
   "version": 1,
-  "generatedAt": null,
-  "user": null,
-  "plan": null,
+  "generatedAt": "2026-07-19T04:47:15.139Z",
+  "user": {
+    "slug": "demo",
+    "createdAt": "2026-07-19T04:28:24.380Z",
+    "profile": {
+      "goal": "Move from full-stack web work into backend AI-agent engineering and ship a production-quality agent service within six months.",
+      "targetRole": "AI Agent Engineer (backend)"
+    }
+  },
+  "plan": {
+    "id": "cmrrb1gkx000309gso8xtwx0t",
+    "title": "Six-Month Backend AI Agent Engineering Plan",
+    "summary": "Build one production-style TypeScript, Node.js, and PostgreSQL agent service over four milestones at roughly eight focused hours per week. Each milestone extends the same repository and produces inspectable proof: durable orchestration, safe tool execution, behavioral evaluation, observability, and a tested production release. Keep the agent’s domain narrow enough that reliability can be demonstrated rather than hidden behind a large feature set.",
+    "status": "ACTIVE",
+    "milestones": [
+      {
+        "id": "cmrrb1gl2000509gso7t7jhab",
+        "idx": 0,
+        "title": "1. Build a Durable Stateful Workflow Core",
+        "description": "Weeks 1–6: turn existing backend skills into an agent workflow service that persists every meaningful transition and can resume interrupted work.",
+        "deliverableSpec": "A versioned repository containing a TypeScript service, PostgreSQL migrations, architecture decision record, workflow-state diagram, REST API, deterministic fake model and tools, and a runnable demonstration of a multi-step task surviving process interruption. The data model must represent runs, steps, attempts, tool calls, outputs, timestamps, and terminal states.",
+        "rubric": [
+          {
+            "criterion": "State is durable",
+            "description": "A reviewer can stop the service during a workflow, restart it, and resume without losing completed steps or duplicating committed effects."
+          },
+          {
+            "criterion": "Transitions are explicit",
+            "description": "Every workflow state and allowed transition is documented and enforced in code; invalid transitions produce a defined error."
+          },
+          {
+            "criterion": "Agent records are inspectable",
+            "description": "Database queries can reconstruct a run’s steps, attempts, tool calls, outputs, and final status in chronological order."
+          },
+          {
+            "criterion": "Failure semantics are defined",
+            "description": "Timeout, retry, cancellation, and terminal-failure behavior have explicit limits and automated tests."
+          },
+          {
+            "criterion": "Setup is reproducible",
+            "description": "A new reviewer can start the database, apply migrations, run the service, and execute the demo using documented commands."
+          }
+        ],
+        "status": "ACTIVE",
+        "tasks": [
+          {
+            "id": "cmrrb1gll000709gs93sps3np",
+            "idx": 0,
+            "title": "Choose One Narrow Agent Job",
+            "brief": "Define a small workflow with a clear outcome, two or three tools, and at least one multi-step decision. Write its success and failure boundaries before implementing it.",
+            "deliverableSpec": "A one-page scope document with example input, expected output, workflow steps, permitted tools, exclusions, and completion criteria.",
+            "whyItMatters": "A narrow job makes orchestration correctness observable and leaves enough time for production engineering.",
+            "status": "ACTIVE",
+            "assignedAt": "2026-07-19T04:37:43.879Z",
+            "completedAt": null
+          },
+          {
+            "id": "cmrrb1gme000909gs80ufdw7t",
+            "idx": 1,
+            "title": "Model Workflow History in PostgreSQL",
+            "brief": "Design tables and constraints for runs, steps, attempts, tool calls, outputs, and state transitions.",
+            "deliverableSpec": "Versioned SQL migrations plus a diagram or concise data-model document containing keys, relationships, status values, and invariants.",
+            "whyItMatters": "This converts general PostgreSQL experience into agent-infrastructure evidence.",
+            "status": "SCHEDULED",
+            "assignedAt": null,
+            "completedAt": null
+          },
+          {
+            "id": "cmrrb1gmg000b09gsqxrus15b",
+            "idx": 2,
+            "title": "Implement the Workflow State Machine",
+            "brief": "Build orchestration behind a REST API using deterministic fake model responses and tools first.",
+            "deliverableSpec": "Endpoints to create, inspect, cancel, and resume runs, with state-transition logic separated from HTTP handlers.",
+            "whyItMatters": "Deterministic components expose orchestration bugs without model variability obscuring the cause.",
+            "status": "SCHEDULED",
+            "assignedAt": null,
+            "completedAt": null
+          },
+          {
+            "id": "cmrrb1gmi000d09gss01korwu",
+            "idx": 3,
+            "title": "Add Recovery and Failure Tests",
+            "brief": "Exercise crashes, duplicate requests, tool timeouts, retry exhaustion, cancellation, and restart recovery.",
+            "deliverableSpec": "Automated integration tests against PostgreSQL, including a test that interrupts and resumes an in-progress workflow.",
+            "whyItMatters": "Production agent services must behave correctly when work is repeated, delayed, or interrupted.",
+            "status": "SCHEDULED",
+            "assignedAt": null,
+            "completedAt": null
+          }
+        ]
+      },
+      {
+        "id": "cmrrb1gml000f09gsncn44bm6",
+        "idx": 1,
+        "title": "2. Add Safe, Idempotent Tool Execution",
+        "description": "Weeks 7–12: introduce real model-mediated tool selection while keeping authority and side effects under backend control.",
+        "deliverableSpec": "An extension of the workflow service with typed tool contracts, schema validation, caller permissions, per-run authorization, idempotency controls, audit records, timeout and retry policies, and at least one simulated side-effecting tool. Include an adversarial test suite proving denied actions do not execute.",
+        "rubric": [
+          {
+            "criterion": "Inputs are validated",
+            "description": "Malformed, oversized, or unexpected tool arguments are rejected before tool implementation code runs."
+          },
+          {
+            "criterion": "Permissions are enforced server-side",
+            "description": "Tests show that caller identity and run policy determine tool access independently of model instructions."
+          },
+          {
+            "criterion": "Side effects are idempotent",
+            "description": "Repeating the same authorized tool request does not create duplicate external effects."
+          },
+          {
+            "criterion": "Audit history is complete",
+            "description": "Each attempted call records the requesting run, tool, validated arguments or safe summary, authorization result, attempt count, timing, and outcome."
+          },
+          {
+            "criterion": "Unsafe requests fail closed",
+            "description": "Unknown tools, missing permissions, policy ambiguity, and exhausted limits result in denial without execution."
+          }
+        ],
+        "status": "LOCKED",
+        "tasks": [
+          {
+            "id": "cmrrb1gmn000h09gseele7z9o",
+            "idx": 0,
+            "title": "Define Typed Tool Contracts",
+            "brief": "Create a registry in which every tool declares its input schema, output schema, timeout, side-effect classification, and required permission.",
+            "deliverableSpec": "Two or three registered tools with TypeScript types, runtime schemas, and contract tests.",
+            "whyItMatters": "Tool metadata gives the backend a reliable enforcement boundary instead of trusting generated text.",
+            "status": "SCHEDULED",
+            "assignedAt": null,
+            "completedAt": null
+          },
+          {
+            "id": "cmrrb1gmp000j09gs41sw3jie",
+            "idx": 1,
+            "title": "Build the Authorization Boundary",
+            "brief": "Pass authenticated caller context and run-scoped permissions into the executor, then check them before dispatch.",
+            "deliverableSpec": "A policy module with allow and deny tests for each tool and role used by the demonstration.",
+            "whyItMatters": "The model may propose an action, but application code must decide whether that action is allowed.",
+            "status": "SCHEDULED",
+            "assignedAt": null,
+            "completedAt": null
+          },
+          {
+            "id": "cmrrb1gmr000l09gsk4byxp0p",
+            "idx": 2,
+            "title": "Protect Side Effects",
+            "brief": "Add idempotency keys, transactional claim logic, bounded retries, and timeouts to the simulated side-effecting tool.",
+            "deliverableSpec": "An executor implementation and concurrency tests showing duplicate or simultaneous requests yield at most one committed effect.",
+            "whyItMatters": "Retries are unavoidable in distributed workflows and must not multiply real-world actions.",
+            "status": "SCHEDULED",
+            "assignedAt": null,
+            "completedAt": null
+          },
+          {
+            "id": "cmrrb1gmt000n09gsxpu8vmx1",
+            "idx": 3,
+            "title": "Run Adversarial Tool Tests",
+            "brief": "Test prompt-driven attempts to invoke unavailable tools, alter arguments, bypass permissions, exceed limits, or replay calls.",
+            "deliverableSpec": "A documented test matrix and automated results showing the expected denial or safe behavior for every case.",
+            "whyItMatters": "Safety claims become credible only when hostile and malformed cases are exercised.",
+            "status": "SCHEDULED",
+            "assignedAt": null,
+            "completedAt": null
+          }
+        ]
+      },
+      {
+        "id": "cmrrb1gmv000p09gsl6jv9ork",
+        "idx": 2,
+        "title": "3. Prove Behavior with Evals and Traces",
+        "description": "Weeks 13–18: create repeatable evidence that the agent succeeds at its task and make failures diagnosable across model calls, tools, and state transitions.",
+        "deliverableSpec": "A versioned evaluation dataset with normal, edge, and adversarial cases; an automated eval runner; explicit outcome metrics; regression thresholds; structured logs, metrics, and correlated traces; and a short failure-analysis report based on actual eval results.",
+        "rubric": [
+          {
+            "criterion": "Success is outcome-based",
+            "description": "Each eval checks task-specific correctness or completion evidence, not merely absence of exceptions."
+          },
+          {
+            "criterion": "Cases are reproducible",
+            "description": "The dataset, model configuration, prompts, tool versions, evaluator version, and run identifiers are recorded sufficiently to repeat a run."
+          },
+          {
+            "criterion": "Regressions are detectable",
+            "description": "A deliberately weakened prompt, policy, or workflow causes the suite to fail a documented threshold."
+          },
+          {
+            "criterion": "Traces explain behavior",
+            "description": "A reviewer can follow one correlation identifier through the request, workflow states, model calls, tool attempts, retries, and final outcome."
+          },
+          {
+            "criterion": "Telemetry is safe and useful",
+            "description": "Logs avoid secrets and unnecessary sensitive content while retaining the fields needed to diagnose tested failures."
+          }
+        ],
+        "status": "LOCKED",
+        "tasks": [
+          {
+            "id": "cmrrb1gmx000r09gs98nfqsaz",
+            "idx": 0,
+            "title": "Write the Evaluation Contract",
+            "brief": "Define what successful completion means, which failures matter, and which metrics represent quality, safety, reliability, latency, and cost.",
+            "deliverableSpec": "A metric specification with calculation rules, thresholds, and examples of passing and failing outcomes.",
+            "whyItMatters": "An agent cannot be improved responsibly until success is defined independently of whether the code ran.",
+            "status": "SCHEDULED",
+            "assignedAt": null,
+            "completedAt": null
+          },
+          {
+            "id": "cmrrb1gmy000t09gsl4008thv",
+            "idx": 1,
+            "title": "Create a Versioned Eval Dataset",
+            "brief": "Build representative normal, edge, recovery, and adversarial cases for the chosen agent job.",
+            "deliverableSpec": "At least 20 reviewable cases with inputs, expected properties, permitted variations, tags, and rationale; avoid unverifiable exact-output matching where several answers are valid.",
+            "whyItMatters": "A stable case set turns behavioral changes into measurable regressions.",
+            "status": "SCHEDULED",
+            "assignedAt": null,
+            "completedAt": null
+          },
+          {
+            "id": "cmrrb1gn0000v09gsoggau2jh",
+            "idx": 2,
+            "title": "Implement the Eval Runner",
+            "brief": "Run cases against deterministic components and a configured model, store results, calculate metrics, and compare them with thresholds.",
+            "deliverableSpec": "A command-line runner that emits machine-readable results and a concise human-readable report, returning failure when required thresholds are missed.",
+            "whyItMatters": "Automated evaluation makes agent behavior part of the engineering feedback loop.",
+            "status": "SCHEDULED",
+            "assignedAt": null,
+            "completedAt": null
+          },
+          {
+            "id": "cmrrb1gn1000x09gsto10jc8b",
+            "idx": 3,
+            "title": "Instrument End-to-End Tracing",
+            "brief": "Add correlation identifiers, structured events, latency measurements, retry counts, token usage where available, and redaction rules.",
+            "deliverableSpec": "A trace or local observability view for each eval run plus documentation mapping telemetry fields to diagnostic questions.",
+            "whyItMatters": "Agent failures cross several components, so ordinary endpoint logs rarely reveal why an outcome was wrong.",
+            "status": "SCHEDULED",
+            "assignedAt": null,
+            "completedAt": null
+          },
+          {
+            "id": "cmrrb1gn3000z09gs9r6lspgi",
+            "idx": 4,
+            "title": "Diagnose Two Real Failures",
+            "brief": "Select two failing evals, use traces to identify their causes, make bounded changes, and rerun the suite.",
+            "deliverableSpec": "A short report containing evidence, root-cause hypotheses, changes made, before-and-after metrics, and remaining uncertainty.",
+            "whyItMatters": "This demonstrates production debugging judgment rather than tool installation alone.",
+            "status": "SCHEDULED",
+            "assignedAt": null,
+            "completedAt": null
+          }
+        ]
+      },
+      {
+        "id": "cmrrb1gn5001109gs9ll4rkpg",
+        "idx": 3,
+        "title": "4. Ship and Defend a Production-Quality Service",
+        "description": "Weeks 19–26: harden, deploy, operate, and explain the complete service as a backend engineering portfolio artifact.",
+        "deliverableSpec": "A deployed service or reproducible production-like environment with authentication, migrations, health checks, graceful shutdown, concurrency controls, secret handling, CI, automated tests and eval gates, dashboards or queryable telemetry, an incident runbook, a threat model, and a recorded or written technical walkthrough. Include a tagged release and a portfolio-ready case study grounded in repository evidence.",
+        "rubric": [
+          {
+            "criterion": "Quality gates are automated",
+            "description": "CI runs formatting or linting, type checks, unit tests, database integration tests, safety tests, and the stable eval subset; a seeded regression demonstrably blocks the pipeline."
+          },
+          {
+            "criterion": "Operations are documented",
+            "description": "Runbooks explain deployment, migration, rollback, stuck-run recovery, retry storms, provider failure, and investigation using actual telemetry."
+          },
+          {
+            "criterion": "Production boundaries are explicit",
+            "description": "Authentication, authorization, secret storage, retention, concurrency, rate limits, and external-provider assumptions are implemented or clearly documented as limitations."
+          },
+          {
+            "criterion": "Reliability is demonstrated",
+            "description": "A scripted exercise injects at least three failures and records recovery behavior, data integrity, alerts or signals, and any unmet service objective."
+          },
+          {
+            "criterion": "Engineering decisions are defensible",
+            "description": "The walkthrough explains state modeling, orchestration, tool safety, eval design, observability, tradeoffs, and known weaknesses using links to code, tests, traces, and results."
+          }
+        ],
+        "status": "LOCKED",
+        "tasks": [
+          {
+            "id": "cmrrb1gn8001309gswcwz1z8m",
+            "idx": 0,
+            "title": "Establish the Production Checklist",
+            "brief": "Translate the service’s risks into concrete controls for authentication, secrets, migrations, concurrency, retention, health, shutdown, rate limits, and dependency failures.",
+            "deliverableSpec": "A checked-in readiness document linking every claimed control to code, configuration, a test, or an explicitly accepted limitation.",
+            "whyItMatters": "A production claim should be supported by inspectable controls rather than feature completeness alone.",
+            "status": "SCHEDULED",
+            "assignedAt": null,
+            "completedAt": null
+          },
+          {
+            "id": "cmrrb1gna001509gsi69oq4cr",
+            "idx": 1,
+            "title": "Build the CI Quality Gate",
+            "brief": "Create fast checks for every commit and a slower stable eval and integration suite for protected changes or scheduled runs.",
+            "deliverableSpec": "A CI workflow with retained test and eval reports plus a documented intentional-regression demonstration that fails the gate.",
+            "whyItMatters": "Automated gates prove reliability practices survive beyond a local development session.",
+            "status": "SCHEDULED",
+            "assignedAt": null,
+            "completedAt": null
+          },
+          {
+            "id": "cmrrb1gnc001709gsppcd3kt2",
+            "idx": 2,
+            "title": "Deploy and Exercise Failure Modes",
+            "brief": "Run the service in a production-like environment and inject provider timeouts, tool failure, process interruption, and duplicate delivery.",
+            "deliverableSpec": "A scripted resilience exercise with traces, database evidence, observed recovery, and follow-up issues for weaknesses discovered.",
+            "whyItMatters": "Controlled failure reveals gaps that happy-path demonstrations cannot.",
+            "status": "SCHEDULED",
+            "assignedAt": null,
+            "completedAt": null
+          },
+          {
+            "id": "cmrrb1gnd001909gsnjp4oy6e",
+            "idx": 3,
+            "title": "Write the Threat Model and Runbook",
+            "brief": "Document assets, trust boundaries, likely misuse, mitigations, alert signals, and operator recovery procedures.",
+            "deliverableSpec": "A concise threat model and incident runbook reviewed against the implemented tool and workflow boundaries.",
+            "whyItMatters": "Backend agent engineering includes anticipating unsafe actions and making incidents recoverable.",
+            "status": "SCHEDULED",
+            "assignedAt": null,
+            "completedAt": null
+          },
+          {
+            "id": "cmrrb1gnf001b09gsy7xtb7xr",
+            "idx": 4,
+            "title": "Prepare the Technical Defense",
+            "brief": "Explain the system to another engineer and answer questions using repository evidence; do not rely on polished claims that cannot be demonstrated.",
+            "deliverableSpec": "A 10–15 minute walkthrough or written case study covering architecture, one successful trace, one failure, eval results, safety controls, tradeoffs, and the next three improvements.",
+            "whyItMatters": "Explaining and defending concrete decisions turns the project into credible proof of role-relevant judgment.",
+            "status": "SCHEDULED",
+            "assignedAt": null,
+            "completedAt": null
+          }
+        ]
+      }
+    ]
+  },
+  "gapAnalysis": {
+    "summary": "Your TypeScript, Node.js, PostgreSQL, and REST background already matches the core stack. The main gaps are agent-specific backend capabilities: reliable stateful orchestration, outcome-based evaluation, production observability, safe tool execution, and rigorous automated testing. With eight focused hours per week, build these as connected parts of one production-style agent service rather than as separate technologies.",
+    "gaps": [
+      {
+        "skill": "Resilient stateful agent workflow orchestration",
+        "whyItMatters": "All three roles need services that preserve state across multi-step or long-running work and recover correctly from failures. This is the central backend skill separating conventional request-response web services from production agent systems.",
+        "rank": 1,
+        "evidenceQuotes": [
+          {
+            "quote": "design stateful workflow orchestration for long-running agent tasks",
+            "jobPostIndex": 0
+          },
+          {
+            "quote": "orchestrate multi-step, stateful agent workflows",
+            "jobPostIndex": 1
+          },
+          {
+            "quote": "make stateful workflow orchestration resilient to failures, retries, and timeouts",
+            "jobPostIndex": 2
+          }
+        ]
+      },
+      {
+        "skill": "Agent evaluation harnesses and success metrics",
+        "whyItMatters": "Production agent teams must measure whether an agent completed the intended task correctly, not merely whether its code executed. You need experience defining success criteria, building repeatable eval cases, and detecting behavioral regressions.",
+        "rank": 2,
+        "evidenceQuotes": [
+          {
+            "quote": "build evaluation and observability pipelines that catch regressions before they ship",
+            "jobPostIndex": 0
+          },
+          {
+            "quote": "evaluation harnesses that measure whether an agent actually succeeded, not just whether it ran without throwing",
+            "jobPostIndex": 1
+          },
+          {
+            "quote": "write the tests and eval suites that prove an agent's output is trustworthy before it reaches real users",
+            "jobPostIndex": 2
+          }
+        ]
+      },
+      {
+        "skill": "Agent observability, tracing, and production debugging",
+        "whyItMatters": "Agent behavior spans multiple model calls, tools, and state transitions, so ordinary request logs are insufficient. You need traces and structured telemetry that make failures and unexpected decisions diagnosable in production.",
+        "rank": 3,
+        "evidenceQuotes": [
+          {
+            "quote": "Experience with LLM eval frameworks, tracing, or retry and timeout semantics is a strong plus.",
+            "jobPostIndex": 0
+          },
+          {
+            "quote": "instrument everything with observability so we can debug agent behavior in production",
+            "jobPostIndex": 1
+          },
+          {
+            "quote": "you'll add agent evaluation and observability",
+            "jobPostIndex": 2
+          }
+        ]
+      },
+      {
+        "skill": "Safe tool-use APIs and permission enforcement",
+        "whyItMatters": "Agents can cause real side effects through tools. A backend agent engineer must constrain available actions, validate inputs, enforce permissions, and prevent unsafe execution rather than relying on model instructions alone.",
+        "rank": 4,
+        "evidenceQuotes": [
+          {
+            "quote": "harden tool-use safety so agents can't take unsafe actions",
+            "jobPostIndex": 0
+          },
+          {
+            "quote": "expose tool-use APIs with strict safety and permission checks",
+            "jobPostIndex": 1
+          },
+          {
+            "quote": "write tool-use safety guards",
+            "jobPostIndex": 2
+          }
+        ]
+      },
+      {
+        "skill": "Automated integration testing for agent systems",
+        "whyItMatters": "Your profile does not list automated or integration testing as a current strength, while every post expects evidence that workflows, failure handling, and agent outputs remain reliable. This testing foundation also supports the higher-level evaluation work.",
+        "rank": 5,
+        "evidenceQuotes": [
+          {
+            "quote": "write rigorous integration tests",
+            "jobPostIndex": 0
+          },
+          {
+            "quote": "with heavy automated testing",
+            "jobPostIndex": 1
+          },
+          {
+            "quote": "you'll write the tests and eval suites",
+            "jobPostIndex": 2
+          }
+        ]
+      },
+      {
+        "skill": "Agent state and trace data modeling in PostgreSQL",
+        "whyItMatters": "General PostgreSQL experience transfers, but agent platforms require a specialized model for workflow state, steps, attempts, tool calls, outputs, and traces. Learning this lets you turn your existing database skill into evidence directly relevant to agent infrastructure roles.",
+        "rank": 6,
+        "evidenceQuotes": [
+          {
+            "quote": "you'll model agent state and traces in PostgreSQL",
+            "jobPostIndex": 0
+          },
+          {
+            "quote": "Our stack is TypeScript, Node.js, and PostgreSQL",
+            "jobPostIndex": 1
+          },
+          {
+            "quote": "against a PostgreSQL data model",
+            "jobPostIndex": 2
+          }
+        ]
+      }
+    ]
+  },
   "reviews": [],
   "defenses": [],
+  "attempts": [
+    {
+      "id": "cmrrb6sn5000309rce92fpxg4",
+      "taskId": "cmrrb1gll000709gs93sps3np",
+      "taskTitle": "Choose One Narrow Agent Job",
+      "kind": "TEXT",
+      "content": "Here's my first pass at the scope document for the agent workflow. Input: a GitHub repo URL plus the task description the learner says they finished. Output: a structured review with three fields — evidence_found (file paths and commits), criteria_met (pass or fail per rubric line), and one next_step suggestion. Success criteria: the agent's pass/fail matches a human reviewer on 8 of 10 sample submissions; every criteria_met entry cites at least one piece of evidence; the whole review completes in under two minutes. Non-goals: grading writing style, auto-merging code, or scoring effort. What failure case am I most likely to be missing in this contract?",
+      "createdAt": "2026-07-19T04:41:52.770Z"
+    },
+    {
+      "id": "cmrrb82x8000309ts1d9ibj2g",
+      "taskId": "cmrrb1gll000709gs93sps3np",
+      "taskTitle": "Choose One Narrow Agent Job",
+      "kind": "COMMIT",
+      "content": "I started on the evidence checker. Here is the function so far:\n\nasync function listEvidence(repoUrl: string) {\n  const { owner, repo } = parseRepoUrl(repoUrl);\n  const commits = await octokit.rest.repos.listCommits({ owner, repo, per_page: 25 });\n  return commits.data.map((c) => ({ sha: c.sha, message: c.commit.message }));\n}\n\nIt works on public repos, but on a private test repo it throws RequestError [HttpError]: Not Found (404). I expected 401 or 403 for auth problems, so I'm confused about the 404. I think I need to pass an auth token but I'm not sure where it belongs or why GitHub answers 404 instead of 403.",
+      "createdAt": "2026-07-19T04:42:52.748Z"
+    }
+  ],
+  "hints": [
+    {
+      "id": "cmrrb7o0k000609rcwmhv4tcd",
+      "taskId": "cmrrb1gll000709gs93sps3np",
+      "taskTitle": "Choose One Narrow Agent Job",
+      "attemptId": "cmrrb6sn5000309rce92fpxg4",
+      "level": 1,
+      "content": "Your output promises a pass/fail for each rubric line, but your input only supplies a repo URL and the learner’s task description. Where does the authoritative rubric come from, and what should the agent do when it is missing or conflicts with the task description?",
+      "createdAt": "2026-07-19T04:42:33.428Z"
+    },
+    {
+      "id": "cmrrb8xua000609tsb8l9o92j",
+      "taskId": "cmrrb1gll000709gs93sps3np",
+      "taskTitle": "Choose One Narrow Agent Job",
+      "attemptId": "cmrrb82x8000309ts1d9ibj2g",
+      "level": 2,
+      "content": "Look up GitHub REST API “authentication” and “404 Not Found for private resources.” Focus on how Octokit receives authentication when the client is constructed—not in `listCommits`—and why GitHub may conceal the existence of a private repository from an unauthenticated or unauthorized caller.",
+      "createdAt": "2026-07-19T04:43:32.818Z"
+    }
+  ],
   "transcriptEntries": []
 }
