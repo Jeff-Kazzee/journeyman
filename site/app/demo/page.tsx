@@ -11,7 +11,7 @@ export default function DemoPage() {
   return (
     <SiteShell current="demo">
       <section className="page-hero compact-hero section-dark">
-        <div className="shell split-section"><div><p className="eyebrow">Static dashboard snapshot</p><h1>{snapshot.plan?.title ?? "No active plan in the snapshot"}</h1><p>{snapshot.plan?.summary ?? "Refresh the committed snapshot from the local demo tenant."}</p><div className="snapshot-notice"><strong>Nothing staged.</strong> A read-only snapshot of a real learner tenant. No database, worker, or agent call runs here.</div></div><Owl pose="planning" alt="Journeyman owl planning milestones" /></div>
+        <div className="shell split-section"><div><p className="eyebrow">A real dashboard, frozen in time</p><h1>{snapshot.plan?.title ?? "No active plan in the snapshot"}</h1><p>{snapshot.plan?.summary ?? "Refresh the committed snapshot from the local demo tenant."}</p><div className="snapshot-notice"><strong>Nothing staged.</strong> This is a saved copy of a real learner’s plan. No database, no AI, nothing running behind it. Just the receipts.</div></div><Owl pose="planning" alt="Hoolio planning milestones" /></div>
       </section>
       <section className="dashboard section-dark">
         <div className="shell">
@@ -25,7 +25,7 @@ export default function DemoPage() {
               <details className="rubric" open={milestone.status === "ACTIVE"}><summary>Review rubric · {rubricItems(milestone.rubric).length} criteria</summary><div className="rubric-grid">{rubricItems(milestone.rubric).map((item) => <div key={item.criterion}><h3>{item.criterion}</h3><p>{item.description}</p></div>)}</div></details>
             </article>)}
           </div>
-          <div className="transcript-preview"><div><p className="eyebrow">Latest evidence</p><h2>The learner’s work stays attached.</h2><p>{snapshot.attempts.length} attempts and {snapshot.hints.length} earned hints are bundled in this export.</p></div><div className="preview-messages">{readerMessages.slice(-2).map((message) => <blockquote key={message.id}><span>{message.label}</span><p>{message.body}</p></blockquote>)}</div><a className="button button-secondary" href={withBase(`/t/${transcriptSlug}/`)}>Read all messages →</a></div>
+          <div className="transcript-preview"><div><p className="eyebrow">Latest evidence</p><h2>The learner’s work stays attached.</h2><p>{snapshot.attempts.length} attempts and {snapshot.hints.length} earned hints ship inside this snapshot. The plan never floats free of the work.</p></div><div className="preview-messages">{readerMessages.slice(-2).map((message) => <blockquote key={message.id}><span>{message.label}</span><p>{message.body}</p></blockquote>)}</div><a className="button button-secondary" href={withBase(`/t/${transcriptSlug}/`)}>Read all messages →</a></div>
         </div>
       </section>
     </SiteShell>

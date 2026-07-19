@@ -103,7 +103,7 @@ export default function WhitepaperPage() {
             <p className="abstract">{abstract}</p>
             <div className="paper-meta"><span>Journeyman · July 2026</span><span>MIT licensed</span><span>Every quote drawn from committed logs and real sessions</span></div>
           </div>
-          <Owl pose="teaching" alt="Journeyman owl teaching beside the white paper" />
+          <Owl pose="teaching" alt="Hoolio teaching beside the white paper" />
         </div>
       </section>
       <section className="paper-body section-dark">
