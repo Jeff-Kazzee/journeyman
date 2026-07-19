@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { deferredExternalPages, externalPages, internalPages, type PageKey } from "../lib/site-data";
+import { withBase } from "../lib/routes";
 
 function PageLinks({ current, showDeferred = false }: { current: PageKey; showDeferred?: boolean }) {
   return (
@@ -14,8 +15,8 @@ function PageLinks({ current, showDeferred = false }: { current: PageKey; showDe
 }
 
 function Brand({ current }: { current: PageKey }) {
-  const content = <><img src="/brand/journeyman-mark.svg" width="40" height="40" alt="" /><span><strong>Journeyman</strong><small>The AI that won’t do your homework.</small></span></>;
-  return current === "home" ? <span className="brand brand-current" aria-current="page">{content}</span> : <a className="brand" href="/">{content}</a>;
+  const content = <><img src={withBase("/brand/journeyman-mark.svg")} width="40" height="40" alt="" /><span><strong>Journeyman</strong><small>The AI that won’t do your homework.</small></span></>;
+  return current === "home" ? <span className="brand brand-current" aria-current="page">{content}</span> : <a className="brand" href={withBase("/")}>{content}</a>;
 }
 
 export function SiteShell({ current, children }: { current: PageKey; children: ReactNode }) {
@@ -41,5 +42,5 @@ export function SiteShell({ current, children }: { current: PageKey; children: R
 }
 
 export function Owl({ pose, alt, className = "", loading = "lazy" }: { pose: "protecting" | "checking" | "teaching" | "planning" | "shipping"; alt: string; className?: string; loading?: "eager" | "lazy" }) {
-  return <img className={`owl ${className}`.trim()} src={`/brand/owl/${pose}.webp`} width="480" height="480" alt={alt} loading={loading} decoding="async" />;
+  return <img className={`owl ${className}`.trim()} src={withBase(`/brand/owl/${pose}.webp`)} width="480" height="480" alt={alt} loading={loading} decoding="async" />;
 }

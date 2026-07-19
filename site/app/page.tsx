@@ -1,5 +1,6 @@
-import { Owl, SiteShell } from "../components/site-shell";
+﻿import { Owl, SiteShell } from "../components/site-shell";
 import { externalPages, featuredAttempt, featuredHint, snapshot, transcriptSlug } from "../lib/site-data";
+import { withBase } from "../lib/routes";
 
 const ladder = [
   ["01", "Socratic question", "One question aimed at the misconception in the learner’s actual attempt."],
@@ -19,7 +20,7 @@ export default function HomePage() {
             <p className="eyebrow">01 · The refusal</p>
             <h1 id="hero-title">The AI that <em className="serif-pop">won’t</em> do your homework.</h1>
             <p className="hero-lede">Journeyman turns “just tell me” into the next honest rep—and leaves a public trail a reviewer can inspect.</p>
-            <a className="button button-primary" href={`/t/${transcriptSlug}/`}>Read the persisted conversation <span aria-hidden="true">→</span></a>
+            <a className="button button-primary" href={withBase(`/t/${transcriptSlug}/`)}>Read the persisted conversation <span aria-hidden="true">→</span></a>
             <Owl pose="protecting" alt="Journeyman owl protecting a locked answer box" className="hero-owl" loading="eager" />
           </div>
           <div className="hero-stage">
@@ -78,10 +79,11 @@ export default function HomePage() {
         <div className="shell section-heading with-owl"><div><p className="eyebrow ink-eyebrow">06 · Inspect it yourself</p><h2 id="try-title">No staged dashboard. No cloud dependency.</h2><p>Open the real snapshot, read the learner’s words, or run the local stack on your own Codex login.</p></div><Owl pose="shipping" alt="Journeyman owl shipping finished work" /></div>
         <div className="action-grid">
           <article><span className="card-number">01</span><h3>Watch the short tour</h3><p>A sub-three-minute product walkthrough is being prepared for the submission.</p><span className="disabled-action" aria-disabled="true">Video · coming</span></article>
-          <article><span className="card-number">02</span><h3>Read the evidence</h3><p>Every persisted attempt and earned hint, rendered from the committed snapshot.</p><a href={`/t/${transcriptSlug}/`}>Open transcript →</a></article>
+          <article><span className="card-number">02</span><h3>Read the evidence</h3><p>Every persisted attempt and earned hint, rendered from the committed snapshot.</p><a href={withBase(`/t/${transcriptSlug}/`)}>Open transcript →</a></article>
           <article><span className="card-number">03</span><h3>Run it in ~10 minutes</h3><p>Local PostgreSQL, your Telegram bot, and your own authenticated Codex CLI.</p><a href={`${github}#quickstart-local-postgresql-17`}>Follow the README ↗</a></article>
         </div>
       </section>
     </SiteShell>
   );
 }
+

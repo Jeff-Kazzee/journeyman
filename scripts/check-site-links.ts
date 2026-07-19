@@ -3,6 +3,16 @@ import path from "node:path";
 import { internalPages } from "../site/lib/routes.ts";
 
 const outputRoot = path.resolve(process.argv[2] ?? "site/out");
+// Must match the build's NEXT_PUBLIC_SITE_BASE_PATH (e.g. "/journeyman" on GitHub Pages).
+const siteBase = process.env.NEXT_PUBLIC_SITE_BASE_PATH ?? "";
+
+function stripBase(pathname: string, route: string, errors?: string[]): string {
+  if (!siteBase) return pathname;
+  if (pathname === siteBase || pathname === `${siteBase}/`) return "/";
+  if (pathname.startsWith(`${siteBase}/`)) return pathname.slice(siteBase.length);
+  errors?.push(`${route} has absolute reference ${pathname} missing the ${siteBase} base path.`);
+  return pathname;
+}
 
 async function filesUnder(directory: string): Promise<string[]> {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -40,13 +50,16 @@ function navRegions(markup: string): string[] {
 
 function canonicalPath(value: string, currentRoute: string): string {
   const url = new URL(value, `https://journeyman.invalid${currentRoute}`);
-  return url.pathname.endsWith("/") || path.posix.extname(url.pathname) ? url.pathname : `${url.pathname}/`;
+  const pathname = stripBase(url.pathname, currentRoute);
+  return pathname.endsWith("/") || path.posix.extname(pathname) ? pathname : `${pathname}/`;
 }
 
-async function resolvesInternalReference(value: string, currentRoute: string): Promise<boolean> {
+async function resolvesInternalReference(value: string, currentRoute: string, errors?: string[]): Promise<boolean> {
   const url = new URL(value, `https://journeyman.invalid${currentRoute}`);
   if (url.origin !== "https://journeyman.invalid") return true;
-  const pathname = decodeURIComponent(url.pathname);
+  const pathname = value.startsWith("/")
+    ? stripBase(decodeURIComponent(url.pathname), currentRoute, errors)
+    : decodeURIComponent(url.pathname);
   const relative = pathname.replace(/^\/+/, "");
   const candidates = path.posix.extname(pathname)
     ? [path.join(outputRoot, relative)]
@@ -64,8 +77,8 @@ async function main() {
   const htmlFiles = files.filter((file) => file.endsWith(".html"));
   const pageFiles = htmlFiles.filter((file) => !["404.html", "404/index.html"].includes(path.relative(outputRoot, file).replaceAll(path.sep, "/")));
   const routes = pageFiles.map(routeFor).sort();
-  const sitePages = internalPages.map((page) => page.href);
   const errors: string[] = [];
+  const sitePages = internalPages.map((page) => stripBase(page.href, "route-manifest", errors));
   let internalReferences = 0;
 
   for (const route of sitePages) if (!routes.includes(route)) errors.push(`Missing required exported page: ${route}`);
@@ -97,7 +110,7 @@ async function main() {
         if (fragment && !ids.has(fragment)) errors.push(`${route} has broken fragment reference ${value}.`);
         continue;
       }
-      if (!await resolvesInternalReference(value, route)) errors.push(`${route} has broken internal reference ${value}.`);
+      if (!await resolvesInternalReference(value, route, errors)) errors.push(`${route} has broken internal reference ${value}.`);
     }
   }
 
@@ -107,7 +120,7 @@ async function main() {
     for (const value of stylesheetReferences(css)) {
       if (/^(?:https?:|data:|blob:)/i.test(value) || value.startsWith("#")) continue;
       internalReferences += 1;
-      if (!await resolvesInternalReference(value, stylesheetPath)) errors.push(`${stylesheetPath} has broken internal asset reference ${value}.`);
+      if (!await resolvesInternalReference(value, stylesheetPath, errors)) errors.push(`${stylesheetPath} has broken internal asset reference ${value}.`);
     }
   }
 

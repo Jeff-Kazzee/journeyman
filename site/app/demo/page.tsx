@@ -1,5 +1,6 @@
-import { Owl, SiteShell } from "../../components/site-shell";
+﻿import { Owl, SiteShell } from "../../components/site-shell";
 import { readerMessages, rubricItems, snapshot, transcriptSlug } from "../../lib/site-data";
+import { withBase } from "../../lib/routes";
 
 function statusLabel(status: string) { return status.toLowerCase().replaceAll("_", " "); }
 
@@ -24,9 +25,10 @@ export default function DemoPage() {
               <details className="rubric" open={milestone.status === "ACTIVE"}><summary>Review rubric · {rubricItems(milestone.rubric).length} criteria</summary><div className="rubric-grid">{rubricItems(milestone.rubric).map((item) => <div key={item.criterion}><h3>{item.criterion}</h3><p>{item.description}</p></div>)}</div></details>
             </article>)}
           </div>
-          <div className="transcript-preview"><div><p className="eyebrow">Latest evidence</p><h2>The learner’s work stays attached.</h2><p>{snapshot.attempts.length} attempts and {snapshot.hints.length} earned hints are bundled in this export.</p></div><div className="preview-messages">{readerMessages.slice(-2).map((message) => <blockquote key={message.id}><span>{message.label}</span><p>{message.body}</p></blockquote>)}</div><a className="button button-secondary" href={`/t/${transcriptSlug}/`}>Read all messages →</a></div>
+          <div className="transcript-preview"><div><p className="eyebrow">Latest evidence</p><h2>The learner’s work stays attached.</h2><p>{snapshot.attempts.length} attempts and {snapshot.hints.length} earned hints are bundled in this export.</p></div><div className="preview-messages">{readerMessages.slice(-2).map((message) => <blockquote key={message.id}><span>{message.label}</span><p>{message.body}</p></blockquote>)}</div><a className="button button-secondary" href={withBase(`/t/${transcriptSlug}/`)}>Read all messages →</a></div>
         </div>
       </section>
     </SiteShell>
   );
 }
+
