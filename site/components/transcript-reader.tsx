@@ -19,7 +19,7 @@ export function TranscriptReader({ messages }: { messages: ReaderMessage[] }) {
         <nav aria-label="Transcript moments"><a href="#boundary-refusal">Refusal boundary</a>{messages.filter((message) => message.marker === "hint").map((message) => <a key={message.id} href={`#${message.id}`}>Level {message.level} hint</a>)}</nav>
       </aside>
       <div className="reader-stream" aria-live="polite">
-        <aside className="reader-message snapshot-boundary marker-refusal" id="boundary-refusal"><div className="margin-marker">Refusal unavailable</div><header><span>Snapshot boundary</span><time>No saved event</time></header><p>Refusals are never stored, so there is no refusal message in this export—and this reader doesn’t manufacture one. The saved conversation begins below.</p></aside>
+        <aside className="reader-message snapshot-boundary marker-refusal" id="boundary-refusal"><div className="margin-marker">Refusal unavailable</div><header><span>Snapshot boundary</span><time>No saved event</time></header><p>Refusals are never stored, so there is no refusal message here, and this reader doesn’t invent one. The saved conversation begins below.</p></aside>
         {filtered.map((message) => <article className={`reader-message ${message.role} ${message.marker === "hint" ? "marker-hint" : ""}`} id={message.id} key={message.id}>
           {message.marker === "hint" ? <div className="margin-marker">Hint {message.level}</div> : null}
           <header><span>{message.label}</span><time dateTime={message.createdAt}>{new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Denver" }).format(new Date(message.createdAt))}</time></header>

@@ -52,7 +52,6 @@
   --jm-radius-md: 0.85rem;
   --jm-radius-lg: 1.25rem;
   --jm-radius-xl: 1.75rem;
-  --jm-shadow-panel: 0 24px 70px rgb(0 0 0 / 0.24);
   --jm-focus-ring: 0 0 0 3px var(--jm-ink-950), 0 0 0 6px var(--jm-amber-300);
   --jm-content: 74rem;
 }

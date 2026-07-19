@@ -38,7 +38,7 @@ export default function HomePage() {
 
       <section className="thesis section-amber" aria-labelledby="thesis-title">
         <div className="shell split-section">
-          <div><p className="eyebrow ink-eyebrow">02 · The thesis</p><h2 id="thesis-title">Every AI will do your homework.</h2><p className="thesis-second">Journeyman makes you do it—and proves you did.</p></div>
+          <div><p className="eyebrow ink-eyebrow">02 · The thesis</p><h2 id="thesis-title">Every AI will do your homework.</h2><p className="thesis-second">Journeyman makes you do it, then proves you did.</p></div>
           <Owl pose="planning" alt="Hoolio sketching out a learner’s next milestone" />
         </div>
       </section>
@@ -46,7 +46,7 @@ export default function HomePage() {
       <section className="receipts section-dark" id="receipts" aria-labelledby="receipts-title">
         <span className="ghost-num" aria-hidden="true">03</span>
         <div className="shell">
-          <div className="section-heading with-owl"><div><p className="eyebrow">03 · The receipts</p><h2 id="receipts-title">Your plan comes from real job ads.</h2><p>Paste in postings for jobs you actually want. Hoolio reads them and lists what you’re missing, and every gap points back at the exact line in the ad that asked for it. {snapshot.gapAnalysis?.summary ? "Here’s the demo learner’s real list:" : "The committed snapshot contains no gap analysis yet."}</p></div><Owl pose="checking" alt="Hoolio reading a job posting with a loupe" /></div>
+          <div className="section-heading with-owl"><div><p className="eyebrow">03 · The receipts</p><h2 id="receipts-title">Your plan comes from real job ads.</h2><p>Paste in postings for jobs you actually want. Hoolio reads them and lists what you’re missing, and every gap points back at the exact line in the ad that asked for it. {snapshot.gapAnalysis?.summary ? "Here’s the demo learner’s real list:" : "No saved gap list to show yet."}</p></div><Owl pose="checking" alt="Hoolio reading a job posting with a loupe" /></div>
           <div className="gap-grid">
             {snapshot.gapAnalysis?.gaps.map((gap) => <article className="gap-card" key={gap.rank}>
               <div className="rank">{String(gap.rank).padStart(2, "0")}</div>
@@ -70,16 +70,16 @@ export default function HomePage() {
 
       <section className="build-story section-dark" aria-labelledby="build-title">
         <span className="ghost-num" aria-hidden="true">05</span>
-        <div className="shell section-heading with-owl"><div><p className="eyebrow">05 · Built the same way</p><h2 id="build-title">The owl had to show his work too.</h2><p>Journeyman’s code was written by OpenAI Codex, one tightly scoped pass at a time, with every instruction and every result committed to the public repo, including <code>codex exec resume</code> threads. The mentor’s reasoning runs on GPT-5.6 with strict schemas, retries, and saved run logs. The mentor that demands shown work was built by an agent that had to show its work.</p></div><Owl pose="planning" alt="Hoolio mapping out the build plan" /></div>
+        <div className="shell section-heading with-owl"><div><p className="eyebrow">05 · Built the same way</p><h2 id="build-title">The owl had to show his work too.</h2><p>Journeyman’s code was written by OpenAI Codex, one tightly scoped pass at a time, with the build passes committed to the public repo, including <code>codex exec resume</code> threads. The mentor’s reasoning runs on GPT-5.6 with strict output rules, retries, and saved run logs. The mentor that demands shown work was built by an agent that had to show its work.</p></div><Owl pose="planning" alt="Hoolio mapping out the build plan" /></div>
         <div className="shell"><div className="terminal" aria-label="Build workflow commands"><div className="terminal-bar"><span /><span /><span /><b>journeyman / build receipts</b></div><pre className="code-block"><code>
           <span className="tok-prompt">$ </span><span className="tok-cmd">codex</span><span className="tok-arg"> exec</span><span className="tok-flag"> --output-schema</span><span className="tok-str"> prompts/hint.schema.json</span>{"\n"}
           <span className="tok-ok">✓</span><span className="tok-out"> one earned ladder level returned</span>{"\n"}{"\n"}
           <span className="tok-prompt">$ </span><span className="tok-cmd">codex</span><span className="tok-arg"> exec resume</span><span className="tok-flag"> --last</span>{"\n"}
-          <span className="tok-ok">✓</span><span className="tok-out"> bounded build thread resumed with its receipts</span>{"\n"}{"\n"}
+          <span className="tok-ok">✓</span><span className="tok-out"> build thread resumed with its receipts</span>{"\n"}{"\n"}
           <span className="tok-prompt">$ </span><span className="tok-cmd">npm</span><span className="tok-arg"> run site:build</span>{"\n"}
           <span className="tok-ok">✓</span><span className="tok-out"> full site built, every internal link checked</span>
         </code></pre></div>
-        <div className="inline-links"><a href={github}>Browse the repository ↗</a><a href={`${github}#architecture`}>Read the integration map ↗</a><a href={`${github}/tree/main/build`}>Inspect public pass artifacts ↗</a></div></div>
+        <div className="inline-links"><a href={github}>Browse the repository ↗</a><a href={`${github}#architecture`}>Read the integration map ↗</a><a href={`${github}/tree/main/build`}>Browse the build receipts ↗</a></div></div>
       </section>
 
       <section className="try-it section-cream" aria-labelledby="try-title">
@@ -87,7 +87,7 @@ export default function HomePage() {
         <div className="action-grid">
           <article><span className="card-number">01</span><h3>Watch the short tour</h3><p>A sub-three-minute walkthrough is being prepared for the submission.</p><span className="disabled-action" aria-disabled="true">Video · coming</span></article>
           <article><span className="card-number">02</span><h3>Read the real conversation</h3><p>Every saved attempt and earned hint, exactly as the learner and Hoolio exchanged them.</p><a href={withBase(`/t/${transcriptSlug}/`)}>Open transcript →</a></article>
-          <article><span className="card-number">03</span><h3>Run it in ~10 minutes</h3><p>Your own computer, your own Telegram bot, your own Codex login. Nothing phones home.</p><a href={`${github}#quickstart-local-postgresql-17`}>Follow the README ↗</a></article>
+          <article><span className="card-number">03</span><h3>Run it in ~10 minutes</h3><p>Your own computer, your own Telegram bot, your own Codex login. No Journeyman servers, no telemetry.</p><a href={`${github}#quickstart-local-postgresql-17`}>Follow the README ↗</a></article>
         </div>
       </section>
     </SiteShell>
