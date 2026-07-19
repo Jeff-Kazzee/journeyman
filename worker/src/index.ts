@@ -3,7 +3,7 @@ import cron from "node-cron";
 import { LoginLinkStatus } from "@prisma/client";
 import { logCodexResolution } from "./codex.ts";
 import { requireTelegramBotToken, timezone } from "./config.ts";
-import { ConversationService, type ConversationResponse } from "./conversation.ts";
+import { ConversationService, recoverInterruptedConversations, type ConversationResponse } from "./conversation.ts";
 import { deliverScheduledTasks, nudgeStalledLearners } from "./daily.ts";
 import { mentorMemory } from "./memory.ts";
 import { prisma } from "./prisma.ts";
@@ -79,6 +79,12 @@ function createBot(token: string) {
 async function main() {
   if (isMemoryCheck) { console.log(await mentorMemory.check() ? "bellamente: up" : "bellamente: down (optional, continuing without it)"); return; }
   if (isDryRun) { console.log(`[worker] dry run: cron would start in ${appTimezone} (07:00 delivery, 19:00 nudge).`); console.log("[worker] dry run: Telegram long-poll bot would start."); return; }
+  try {
+    const recovered = await recoverInterruptedConversations();
+    if (recovered) console.log(`[worker] marked ${recovered} interrupted conversation run${recovered === 1 ? "" : "s"} retryable.`);
+  } catch (error) {
+    console.error("[worker] boot recovery failed; continuing without recovery", error);
+  }
   logCodexResolution();
   const bot = createBot(requireTelegramBotToken()); installCronJobs(bot); console.log("[worker] starting Telegram long-polling bot.");
   await bot.start({ onStart: (info) => console.log(`[worker] connected as @${info.username}`) });
