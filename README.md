@@ -2,11 +2,13 @@
 
 > **The AI that won’t do your homework.**
 
-Journeyman is an apprenticeship agent for adults changing careers. It handles planning, daily structure, review, and accountability; the learner supplies the practice. Its public transcript is evidence a stranger can inspect, not a portfolio claim.
+Journeyman is an apprenticeship agent for adults changing careers. It handles planning, daily structure, review, and accountability; the learner supplies the practice. Its public transcript is evidence a stranger can inspect, not a portfolio claim. The mentor is Hoolio, an owl who will help you when you show your work and politely refuse when you don't.
+
+**Live demo, transcript, and white paper:** https://the-little-ai-company.github.io/journeyman/
 
 ## Local-first configuration
 
-Journeyman has **no `.env` file**. Configuration comes only from process environment variables: user variables on Windows for local development and the Vercel dashboard for deployment. This prevents credentials from being copied into a repository or an accidental demo bundle.
+Journeyman has **no `.env` file**. Configuration comes only from process environment variables: user variables on Windows for local development. The public demo site is a static export and needs no configuration at all. This prevents credentials from being copied into a repository or an accidental demo bundle.
 
 The database URL is intentionally credential-free. If it is not set, the application defaults to:
 
@@ -104,7 +106,7 @@ If it is down, Journeyman continues normally. The worker gives each Bellamente r
 
 ## Judge access
 
-- **Zero setup:** the Vercel deploy serves `/demo` from committed `data/demo-snapshot.json`; it needs no database, process variables, worker, or agent call.
+- **Zero setup:** the live site at https://the-little-ai-company.github.io/journeyman/ serves the landing page, the `/demo` dashboard, the `/t/demo` transcript, and the white paper from the committed `data/demo-snapshot.json`; it needs no database, process variables, worker, or agent call. It deploys by GitHub Actions from this repository's mirror in The Little AI Company organization.
 - **Local live-run (~10 min):** install Node/PostgreSQL, set the three user variables, complete the one-time database owner setup above, then run web and worker with the judge’s own Codex login.
 
 Before publishing a judge build, export Jeff’s real local `demo` user into the committed snapshot:
@@ -123,6 +125,7 @@ The exporter includes the demo user’s plan, milestones, tasks, reviews, defens
 - `worker/` — grammY long-poll bot, cron scheduler, optional Bellamente adapter, and the sole Codex CLI execution seam.
 - `worker/src/codex.ts` — `runAgent(kind, promptFile, context, schema)` spawns `codex exec` with a JSON output schema, a read-only sandbox by default, one malformed-output retry, Zod validation, and persisted `AgentRun` logs.
 - `prompts/` — versioned prompt-contract boundary for later feature passes.
+- `site/` — the public demo site (Next.js static export), built by `npm run site:build` and deployed to GitHub Pages.
 
 ## How Codex built this
 
