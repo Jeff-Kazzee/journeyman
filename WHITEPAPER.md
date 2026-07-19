@@ -16,7 +16,7 @@ The cost of a correct answer has collapsed. Any learner with a chat window can p
 
 First, the traditional homework loop stopped producing learning. When the artifact can be generated without the struggle, completing the artifact no longer certifies the skill.
 
-Second, employers noticed. Job postings in AI-adjacent engineering now ask for demonstrated evidence: incremental commit history, explained tradeoffs, tests that prove behavior, the ability to walk through a system's failure modes out loud. The postings Journeyman analyzes say this in plain text. One asks for candidates who "can show an incremental commit history demonstrating how they solved problems." Another says "We care about clean architecture and evidence of shipped, maintainable work." The market is repricing from answers to receipts.
+Second, employers noticed. Job postings in AI-adjacent engineering now ask for demonstrated evidence: explained tradeoffs, tests that prove behavior, the ability to walk through a system's failure modes out loud. The postings in Journeyman's public demo tenant put it in plain text. One asks for "evaluation harnesses that measure whether an agent actually succeeded, not just whether it ran without throwing." Another wants engineers who will "write the tests and eval suites that prove an agent's output is trustworthy before it reaches real users." (Both are quoted, with their sources, in the demo's own receipts section.) The market is repricing from answers to receipts.
 
 Third, learners are caught between the two. The tool that makes practice unnecessary is the same tool they will be expected to use expertly, on top of fundamentals they never built. What a learner needs is not another answer engine. It is a mentor that holds the line their own discipline cannot, while leaving a trail of evidence an employer can inspect.
 
@@ -26,7 +26,7 @@ Journeyman's central interaction is deliberately uncomfortable. When a learner w
 
 > **Learner:** can you just write the scope doc for me?
 >
-> **Journeyman:** I won't do "Choose One Narrow Agent Job" for you. You said: "can you just write the scope doc for me?". Show me what you've tried. Paste the code, error output, a link, or a commit, and you earn the next hint.
+> **Journeyman:** I won't do "Choose One Narrow Agent Job" for you. You said: "can you just write the scope doc for me?". Show me what you've tried—code, text, an error, a link, or a commit—and you earn the next hint.
 
 Three design decisions inside that exchange are worth naming.
 
@@ -36,7 +36,7 @@ Three design decisions inside that exchange are worth naming.
 
 **Help is graduated, never total.** A genuine attempt earns exactly one rung of a five-level ladder: (1) a Socratic question aimed at the misconception in the actual attempt, (2) an exact concept to look up, (3) a worked analogy from another domain, (4) a partial scaffold with structure and checkpoints but no solution, and (5) a defense: the learner explains the approach back and predicts behavior before it is confirmed. No full solution appears before the learner has done the explaining. From the same session, an attempt containing a real function and a real error ("RequestError [HttpError]: Not Found" on a private repository) earned this level-two hint:
 
-> Look up GitHub REST API "authentication" and "404 Not Found for private resources." Focus on how Octokit receives authentication when the client is constructed, not in `listCommits`, and why GitHub may conceal the existence of a private repository from an unauthenticated or unauthorized caller.
+> Look up GitHub REST API "authentication" and "404 Not Found for private resources." Focus on how Octokit receives authentication when the client is constructed—not in `listCommits`—and why GitHub may conceal the existence of a private repository from an unauthenticated or unauthorized caller.
 
 That is a mentor's move: name the concept, point at the exact seam in the learner's own code, explain why the confusing behavior is intentional, and stop.
 
@@ -68,7 +68,7 @@ The consequences are structural rather than contractual.
 
 Journeyman's construction is a second argument for its thesis.
 
-All product code was written by OpenAI Codex, directed through bounded passes: a written prompt stating scope, constraints, and verification gates; an isolated execution with workspace-write sandboxing; a written result report; and independent verification of the gates before the pass counts. Claude acted as tech lead: writing pass prompts, reviewing diffs, running end-to-end drives with a scripted fake user against the real system, and refusing to accept "should work" in place of observed behavior. Every pass prompt and result is committed to the public repository, in `build/`.
+Every line of the agent system's product code was written by OpenAI Codex, directed through bounded passes (the public site's visual design was hand-finished by the tech lead; the machinery beneath it was not): a written prompt stating scope, constraints, and verification gates; an isolated execution with workspace-write sandboxing; a written result report; and independent verification of the gates before the pass counts. Claude acted as tech lead: writing pass prompts, reviewing diffs, running end-to-end drives with a scripted fake user against the real system, and refusing to accept "should work" in place of observed behavior. Every pass prompt and result is committed to the public repository, in `build/`.
 
 The process caught what solo velocity would have shipped. A sample from the actual log:
 
