@@ -1,8 +1,14 @@
 # Journeyman demo site — design spec
 
 Design documentation for the public judging site (BRIEF §2 "Testing access",
-SPEC §9). This is the target Codex builds to. Status: DRAFT for Jeff's review;
-not yet committed to dev.
+SPEC §9). This is the target Codex builds to.
+
+**Static-export caveat for Pass A:** the current app is NOT export-compatible
+— `next.config.ts` uses `outputFileTracingIncludes` (server-only) and the app
+carries `app/api` + `app/login` routes, which cannot coexist with
+`output: 'export'`. The public site must either build as a separate static
+target (own route group/app with its own config) or the demo build must strip
+API/login routes. Decide in Pass A; don't discover it mid-build.
 
 ## 1. Purpose and hard constraints
 
@@ -84,6 +90,21 @@ not yet committed to dev.
   moments get subtle amber margin-markers so judges can jump straight to the
   wow beats. This page is the demo's soul: it is *evidence*, not marketing.
 
+## 4b. Navigation contract (Jeff, 07-18: hard requirement)
+
+- **One global nav, present on every page** (header; mirrored in the footer).
+  It lists **every page of the site**: Home, Demo dashboard, Transcript (the
+  canonical public slug), White paper — plus external: GitHub, Video,
+  Devpost, and "Try the bot" (Telegram).
+- **The current page's link disappears from the nav** — it renders as a
+  plain "you are here" marker (non-clickable, visually distinct), never as a
+  link to itself. Every other page is always one click away, from anywhere.
+- No orphan pages, no dead ends: every page reachable from every page;
+  consistent header/footer everywhere; the same nav order on all pages.
+- **Automated gate (site passes):** a link-graph check in the build — every
+  generated page must contain nav links to all other pages except itself,
+  and zero broken internal links. Fails the build if violated.
+
 ## 5. Motion design rules
 
 - Library: Framer Motion + CSS transforms; no scroll-jacking, no parallax
@@ -99,9 +120,9 @@ not yet committed to dev.
 
 | Asset | Source | Notes |
 |---|---|---|
-| 5 owl poses (SVG-clean PNG, 2x) | OpenAI image gen, then background-stripped | consistent character sheet; prompt kit kept in `build/` |
-| Hero OG image (1200×630) | Refusal owl + tagline | Devpost/social embeds |
-| Favicon | owl head mark | |
+| Owl poses | **Existing TLAC brand kit** (`TLAC/public/brand/mascot/`): `protecting` = refusal/hero (owl locking the answer box), `checking` = receipts, `teaching` = ladder, `planning` = plan, `shipping`/`celebrating` = close; copied into `public/brand/owl/` | consistent production set already exists; OpenAI image gen only if a wings-crossed refusal or dark-bg treatment proves necessary |
+| Hero OG image (1200×630) | `protecting` owl + tagline on workshop-dark | Devpost/social embeds |
+| Favicon | TLAC owl mark SVG (existing) | |
 | Chat replay data | real transcript JSON (snapshot) | verbatim, no editing beyond redaction rules |
 | Terminal build-story clip | typed-text component, not video | keeps page static & light |
 
@@ -114,7 +135,28 @@ not yet committed to dev.
 | Potential Impact | Beat 2 thesis + receipts (evidence-cited gaps → real employability skills) |
 | Quality of Idea | Beat 1 refusal cold-open — the anti-homework mentor, instantly legible |
 
-## 8. Build plan (Codex passes, per the standard workflow)
+## 8. The dashboard wears the same system (Jeff, 07-18: non-negotiable)
+
+The authenticated app (`/app`: plan, milestones, tasks, transcript) and the
+public `/demo` (the same dashboard rendered from the snapshot) must meet the
+SAME visual bar as the landing page — one design system, not a marketing site
+with an admin panel behind it. Concretely:
+
+- Shared tokens (palette, type, spacing, motion) live in one place; `/app`,
+  `/demo`, and the landing all consume them. Dark workshop theme everywhere.
+- Dashboard-specific polish: milestone cards with rubric reveal, task states
+  with amber ACTIVE treatment, transcript with the same margin-markers as
+  `/t/<slug>`, owl poses in empty states (e.g. `planning` before a plan
+  exists, `celebrating` on milestone completion), skeleton loading states,
+  keyboard focus everywhere.
+- Access model (unchanged, and part of the pitch): magic-link from the bot →
+  HMAC session cookie → every query user-scoped. Local-first: each user runs
+  their own stack, so their data never leaves their machine and the operator
+  pays nothing for other people's compute. Judges: static snapshot (free,
+  Vercel) or README local-run on their own auth. Multi-tenant SaaS with
+  metered billing is the stated post-hackathon roadmap, not a weekend build.
+
+## 9. Build plan (Codex passes, per the standard workflow)
 
 1. **Pass A — skeleton + design system:** palette/type tokens, layout, static
    export config, snapshot wiring, all copy in place unanimated. Gate:

@@ -9,6 +9,7 @@ import { prisma } from "./prisma.ts";
 const MAX_POSTS = 5;
 const MIN_POSTS = 3;
 const TELEGRAM_LIMIT = 4000;
+// Deliberate stale-client workaround; use ConversationStage.PLAN_RUNNING after the next `prisma generate`.
 const PLAN_RUNNING = "PLAN_RUNNING" as ConversationStage;
 
 export const gapAnalysisSchema = z.object({
@@ -41,14 +42,15 @@ type FailedHint = { taskId: string; attemptId: string; level: number };
 type Data = {
   goal?: string; targetRole?: string; background?: string; constraints?: string; selfAssessedSkills?: string[];
   gaps?: GapAnalysis; proposedPlan?: ProposedPlan; planId?: string; pendingPosts?: PendingPost[];
-  donePrompted?: boolean; startOffer?: boolean; pendingChange?: string; consecutiveNonAttempts?: number; lastFailedRun?: FailedKind; failedHint?: FailedHint;
+  donePrompted?: boolean; startOffer?: boolean; pendingChange?: string; consecutiveNonAttempts?: number;
+  consecutiveColdAsks?: number; coldAskTemplateCount?: number; admissionTemplateCount?: number; lastFailedRun?: FailedKind; failedHint?: FailedHint;
 };
 type TaskCard = Pick<Task, "title" | "brief" | "deliverableSpec" | "whyItMatters">;
 
 function dataOf(value: Prisma.JsonValue): Data { return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Data : {}; }
 function json(data: Data): Prisma.InputJsonValue { return JSON.parse(JSON.stringify(data)) as Prisma.InputJsonValue; }
-function withoutFailure(data: Data): Data { const next = { ...data }; delete next.lastFailedRun; delete next.failedHint; return next; }
-function withoutNonAttempts(data: Data): Data { const next = { ...data }; delete next.consecutiveNonAttempts; return next; }
+function withoutFailure(data: Data): Data { const next = { ...data }; delete next.lastFailedRun; delete next.failedHint; delete next.pendingChange; return next; }
+function withoutNonAttempts(data: Data): Data { const next = { ...data }; delete next.consecutiveNonAttempts; delete next.consecutiveColdAsks; delete next.coldAskTemplateCount; delete next.admissionTemplateCount; return next; }
 function response(...texts: string[]): ConversationResponse { return { messages: texts.flatMap((text) => chunkTelegramMessage(text)) }; }
 export function chunkTelegramMessage(text: string, limit = TELEGRAM_LIMIT): string[] {
   if (text.length <= limit) return [text];
@@ -126,39 +128,46 @@ function retryableJobPost(rawText: string): boolean {
   if (value.length < 200) return false;
   return !/^(?:no+|nope|nah|wait|hold on|stop|not that|that(?:'s| is| was) all|i'?m done|done|finished)\b/i.test(value);
 }
-function hasConcreteAttempt(input: string): boolean { return /https?:\/\/|\b(?:error|exception|stack|failed|failing|commit|test|tried|attempted|implemented|console|typescript|html|css|function|component)\b/i.test(input); }
+function hasConcreteAttempt(input: string): boolean {
+  const technicalVocabulary = /https?:\/\/|\b(?:api|fetch|endpoint|status|request|response|button|click|handler|bind|loop|array|grid|throw|bug|undefined|null|query|route|render|state|error|exception|stack|failed|failing|commit|test|tried|attempted|implemented|code|console|typescript|javascript|html|css|function|component|variable|object|promise|async|await|database|sql|json|server|client|timeout|form|input|event|hook|props)\b|\b[45](?:\d{2}(?:ing)?|xx)\b/i;
+  const pastedCode = /```|(?:^|\s)(?:const|let|var|class|def|function|return|import|from)\s+[\w{*]|=>|===|!==|\?\.|<[A-Za-z][^>]*>|\w+\s*\([^\n)]*\)\s*\{/m;
+  return technicalVocabulary.test(input) || pastedCode.test(input);
+}
 function fakeAttempt(input: string): boolean {
   const value = input.trim().toLowerCase();
   if (/^(?:idk|i don'?t know|no idea|help|just tell me|you tell me|do it for me)[.!?\s]*$/.test(value)) return true;
   const concrete = hasConcreteAttempt(input);
-  return (!concrete && /^(?:how do i|what do i|can you|could you|would you|please|tell me|explain)/i.test(value)) || (input.trim().length < 30 && !concrete);
+  return !concrete && /^(?:how do i|what do i|can you|could you|would you|please|tell me|explain|give me|solve\b|write (?:it|this|the)\b|finish (?:it|this|the)\b)/i.test(value);
 }
 function nonAttemptKind(input: string): NonAttemptKind | null {
   const value = input.trim().toLowerCase().replace(/’/g, "'").replace(/\s+/g, " ");
-  const admission = !hasConcreteAttempt(input) && /^(?:i\s+did(?:\s+not|n't)\s+(?:do|start)(?:\s+it)?|i\s+have(?:\s+not|n't)\s+started|i(?:'m|\s+am)\s+stuck|(?:i\s+)?can(?:not|'t)\s+do\s+this|(?:i\s+)?(?:do\s+not|don't)\s+know\s+where\s+to\s+start)\b/.test(value);
+  const admission = input.trim().length < 40 && !hasConcreteAttempt(input)
+    && /^(?:i\s+did(?:\s+not|n't)\s+(?:do|start)(?:\s+it)?|i\s+have(?:\s+not|n't)\s+started|i(?:'m|\s+am)\s+stuck|(?:i\s+)?can(?:not|'t)\s+do\s+this|(?:i\s+)?(?:do\s+not|don't)\s+know\s+where\s+to\s+start)[.!?]*$/.test(value);
   if (admission) return "admission";
   return fakeAttempt(input) ? "cold-ask" : null;
 }
 function shortQuote(input: string): string { return input.replace(/[\r\n]+/g, " ").replace(/[\u0000-\u001f\u007f]/g, "").replace(/\s+/g, " ").trim().slice(0, 60); }
-function refusalText(task: TaskCard, input: string, count: number): string {
+function refusalText(task: TaskCard, input: string, streak: number, templateCount: number): string {
   const fragment = shortQuote(input);
   const templates = [
-    `I won’t do “${task.title}” for you. You said: “${fragment}”. Show me what you’ve tried—code, text, an error, a link, or a commit—and you earn the next hint.`,
+    `I won’t do “${task.title}” for you.${fragment ? ` You said: “${fragment}”.` : ""} Show me what you’ve tried—code, text, an error, a link, or a commit—and you earn the next hint.`,
     `The boundary on “${task.title}” is firm: I don’t provide the finished answer. Show me what you’ve tried, even if it is rough or broken, and you earn the next hint.`,
     `For “${task.title},” asking for the solution does not unlock it. Show me what you’ve tried; one concrete attempt earns the next hint.`,
-    `I can coach you through “${task.title},” but I can’t take the rep for you. Your message was: “${fragment}”. Show me what you’ve tried and you earn the next hint.`,
+    `I can coach you through “${task.title},” but I can’t take the rep for you.${fragment ? ` Your message was: “${fragment}”.` : ""} Show me what you’ve tried and you earn the next hint.`,
     `No finished solution from me for “${task.title}.” Show me what you’ve tried—any inspectable attempt is enough to earn the next hint.`,
   ];
-  const escalation = count === 3
+  const escalation = streak === 3
     ? "Third ask with nothing shown. The rule hasn’t changed: show an attempt, earn a hint. Use /task to reopen the deliverable spec."
-    : count > 3 ? "Another ask with nothing shown. The rule hasn’t changed: show an attempt, earn a hint. Use /task to reopen the deliverable spec." : "";
-  return [escalation, templates[(count - 1) % templates.length]].filter(Boolean).join("\n\n");
+    : streak > 3 ? "Another ask with nothing shown. The rule hasn’t changed: show an attempt, earn a hint. Use /task to reopen the deliverable spec." : "";
+  return [escalation, templates[(templateCount - 1) % templates.length]].filter(Boolean).join("\n\n");
 }
+function sentence(text: string): string { const value = text.trim(); return /[.!?…](?:["')\]]*)$/.test(value) ? value : `${value}.`; }
 function admissionNudge(task: TaskCard, count: number): string {
+  const brief = sentence(task.brief);
   const templates = [
-    `Thanks for saying it plainly. For “${task.title},” shrink the task to one first move: ${task.brief} Put down the roughest beginning you can. Paste anything—even broken code or a half-written paragraph—and you earn a hint. Use /task to reopen the full task, or /pause if you need to step away.`,
-    `Stuck is a real state, not a failure. On “${task.title},” make the next move only this: ${task.brief} A rough fragment is enough to start. Paste anything—even broken code or a half-written paragraph—and you earn a hint. Use /task to see the task again, or /pause if you need room.`,
-    `No shame in not starting. For “${task.title},” begin with the smallest version of this move: ${task.brief} It does not need to work yet. Paste anything—even broken code or a half-written paragraph—and you earn a hint. Use /task for the full task, or /pause if today is not workable.`,
+    `Thanks for saying it plainly. For “${task.title},” shrink the task to one first move: ${brief} Put down the roughest beginning you can. Paste anything—even broken code or a half-written paragraph—and you earn a hint. Use /task to reopen the full task, or /pause if you need to step away.`,
+    `Stuck is a real state, not a failure. On “${task.title},” make the next move only this: ${brief} A rough fragment is enough to start. Paste anything—even broken code or a half-written paragraph—and you earn a hint. Use /task to see the task again, or /pause if you need room.`,
+    `No shame in not starting. For “${task.title},” begin with the smallest version of this move: ${brief} It does not need to work yet. Paste anything—even broken code or a half-written paragraph—and you earn a hint. Use /task for the full task, or /pause if today is not workable.`,
   ];
   return templates[(count - 1) % templates.length];
 }
@@ -216,7 +225,7 @@ export class ConversationService {
   }
 
   private async ensureState(userId: string): Promise<ConversationState> { return prisma.conversationState.upsert({ where: { userId }, create: { userId, data: json({}) }, update: {} }); }
-  private async resetNonAttempts(userId: string): Promise<void> { const state = await this.ensureState(userId); const data = dataOf(state.data); if (data.consecutiveNonAttempts !== undefined) await prisma.conversationState.update({ where: { userId }, data: { data: json(withoutNonAttempts(data)) } }); }
+  private async resetNonAttempts(userId: string): Promise<void> { const state = await this.ensureState(userId); const data = dataOf(state.data); if (data.consecutiveNonAttempts !== undefined || data.consecutiveColdAsks !== undefined || data.coldAskTemplateCount !== undefined || data.admissionTemplateCount !== undefined) await prisma.conversationState.update({ where: { userId }, data: { data: json(withoutNonAttempts(data)) } }); }
   private async deliver(userId: string, result: ConversationResponse): Promise<void> { try { await this.asyncResponder?.(userId, result); } catch (error) { console.error("[conversation] async delivery failed", error); } }
   private async advance(userId: string, stage: ConversationStage, data: Data, text: string): Promise<ConversationResponse> { await prisma.conversationState.update({ where: { userId }, data: { stage, data: json(data) } }); return response(text); }
   private async resumeOffer(userId: string, state: ConversationState, data: Data, input: string): Promise<ConversationResponse> {
@@ -295,7 +304,7 @@ export class ConversationService {
     return this.runPlan(userId, profile, next);
   }
   private async launchPlan(userId: string, profile: LearnerProfile, data: Data, change?: string, revision = 0): Promise<ConversationResponse> {
-    const running = withoutFailure({ ...data, pendingChange: change });
+    const running = { ...withoutFailure(data), ...(change ? { pendingChange: change } : {}) };
     await prisma.conversationState.update({ where: { userId }, data: { stage: PLAN_RUNNING, data: json(running), planRevisionCount: revision } });
     if (!this.asyncResponder) return this.runPlan(userId, profile, running, change, revision);
     void this.runPlan(userId, profile, running, change, revision).then((result) => this.deliver(userId, result)).catch((error) => console.error("[conversation] contained plan failure", error));
@@ -356,8 +365,24 @@ export class ConversationService {
   private async activeTaskMessage(userId: string, data: Data, input: string): Promise<ConversationResponse> {
     const task = await activeTaskForUser(userId); if (!task) return response("No active task right now. Finish onboarding with /start, or check /plan.");
     const nonAttempt = nonAttemptKind(input);
-    if (nonAttempt) { const count = (data.consecutiveNonAttempts ?? 0) + 1; await prisma.conversationState.update({ where: { userId }, data: { data: json({ ...data, consecutiveNonAttempts: count }) } }); return response(nonAttempt === "admission" ? admissionNudge(task, count) : refusalText(task, input, count)); }
-    const next = withoutNonAttempts(data); if (data.consecutiveNonAttempts !== undefined) await prisma.conversationState.update({ where: { userId }, data: { data: json(next) } });
+    if (nonAttempt) {
+      const next = { ...data }; delete next.consecutiveNonAttempts;
+      if (nonAttempt === "cold-ask") {
+        const streak = (data.consecutiveColdAsks ?? 0) + 1;
+        const templateCount = (data.coldAskTemplateCount ?? 0) + 1;
+        next.consecutiveColdAsks = streak;
+        next.coldAskTemplateCount = templateCount;
+        await prisma.conversationState.update({ where: { userId }, data: { data: json(next) } });
+        return response(refusalText(task, input, streak, templateCount));
+      }
+      delete next.consecutiveColdAsks;
+      const templateCount = (data.admissionTemplateCount ?? 0) + 1;
+      next.admissionTemplateCount = templateCount;
+      await prisma.conversationState.update({ where: { userId }, data: { data: json(next) } });
+      return response(admissionNudge(task, templateCount));
+    }
+    const next = withoutNonAttempts(data);
+    if (data.consecutiveNonAttempts !== undefined || data.consecutiveColdAsks !== undefined || data.coldAskTemplateCount !== undefined || data.admissionTemplateCount !== undefined) await prisma.conversationState.update({ where: { userId }, data: { data: json(next) } });
     const count = await prisma.hintEvent.count({ where: { userId, taskId: task.id } }); if (count >= 5) return response("You’re at level 5/5 on this task. Bring your current explanation to the defense-style wrap-up rather than asking for more solution text.");
     const level = count + 1; const attempt = await prisma.attempt.create({ data: { userId, taskId: task.id, kind: kindOfAttempt(input), content: input } }); return this.launchHint(userId, next, task, attempt.id, input, level);
   }
