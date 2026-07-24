@@ -1,6 +1,6 @@
 # Journeyman static demo target
 
-This directory is a separate Next.js App Router target built with
+This directory is a separate Next.js 15.5.21 App Router target built with
 `output: "export"`. It intentionally owns only the public judging routes and
 imports the committed `../data/demo-snapshot.json`; the authenticated root app,
 API handlers, login flow, Prisma client, and worker never enter this build.

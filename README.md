@@ -119,13 +119,13 @@ The exporter includes the demo user’s plan, milestones, tasks, reviews, defens
 
 ## Architecture
 
-- `app/` — Next.js App Router UI. It reads local PostgreSQL through Prisma and never invokes an agent while rendering.
+- `app/` — Next.js 15.5.21 App Router UI. It reads local PostgreSQL through Prisma and never invokes an agent while rendering.
 - `data/demo-snapshot.json` — committed, database-free judge artifact.
 - `prisma/schema.prisma` — shared PostgreSQL source of truth.
 - `worker/` — grammY long-poll bot, cron scheduler, optional Bellamente adapter, and the sole Codex CLI execution seam.
 - `worker/src/codex.ts` — `runAgent(kind, promptFile, context, schema)` spawns `codex exec` with a JSON output schema, a read-only sandbox by default, one malformed-output retry, Zod validation, and persisted `AgentRun` logs.
 - `prompts/` — versioned prompt-contract boundary for later feature passes.
-- `site/` — the public demo site (Next.js static export), built by `npm run site:build` and deployed to GitHub Pages.
+- `site/` — the public demo site (Next.js 15.5.21 static export), built by `npm run site:build` and deployed to GitHub Pages.
 
 ## How Codex built this
 
@@ -149,4 +149,4 @@ All mentor reasoning is GPT-5.6 via the Codex CLI, authenticated with the user's
 
 ## Third-party software
 
-This project uses Next.js, React, Prisma, Tailwind CSS, grammY, node-cron, Zod, Bellamente (optional local service), and the Codex CLI. Their respective licenses apply.
+This project uses Next.js 15.5.21 (Maintenance LTS), React, Prisma, Tailwind CSS, grammY, node-cron, Zod, Bellamente (optional local service), and the Codex CLI. Their respective licenses apply.

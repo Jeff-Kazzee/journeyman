@@ -172,7 +172,8 @@ Raw evidence linked, not just claims.
                           └──────────────────┘      └─────────────┘
 ```
 
-- **Web:** Next.js 15 (App Router, TypeScript), Tailwind, deployed Vercel free tier.
+- **Web:** Next.js 15.5.21 Maintenance LTS (App Router, TypeScript), Tailwind,
+  deployed Vercel free tier.
 - **DB:** **local PostgreSQL 17** (existing Windows service, trust-auth on
   loopback). Prisma ORM. Single source of truth — the web app never calls the
   agent; it renders DB state. No cloud database anywhere (see §9).
