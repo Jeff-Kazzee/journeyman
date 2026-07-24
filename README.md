@@ -2,7 +2,7 @@
 
 > **The AI that won’t do your homework.**
 
-Journeyman is an apprenticeship agent for adults changing careers. It handles planning, daily structure, review, and accountability; the learner supplies the practice. Its public transcript is evidence a stranger can inspect, not a portfolio claim. The mentor is Hoolio, an owl who will help you when you show your work and politely refuse when you don't.
+Journeyman is an apprenticeship agent for adults changing careers. It handles planning, daily structure, review, and accountability; the learner supplies the practice. Its public transcript is evidence a stranger can inspect, not a portfolio claim. Journeyman is the mentor. Hoolio, the Little AI Company owl, is the character at the workbench who represents its show-your-work rule.
 
 **Live demo, transcript, and white paper:** https://the-little-ai-company.github.io/journeyman/
 

@@ -5,7 +5,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: { default: "Journeyman: The AI that won’t do your homework", template: "%s · Journeyman" },
-  description: "Meet Hoolio, the AI mentor who won’t do your homework. He reads real job ads, finds what you’re missing, and hands you real work to close the gap. Runs on your machine.",
+  description: "Meet Hoolio, the Little AI Company owl. Journeyman is the AI mentor that reads real job ads, finds what you are missing, and hands you real work to close the gap. Runs on your machine.",
   icons: { icon: withBase("/brand/journeyman-mark.svg") },
 };
 

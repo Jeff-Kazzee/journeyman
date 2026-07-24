@@ -32,7 +32,7 @@ export function SiteShell({ current, children }: { current: PageKey; children: R
       <main id="main-content">{children}</main>
       <footer className="site-footer">
         <div className="shell footer-grid">
-          <div><p className="footer-wordmark">Journeyman</p><p className="muted">An AI mentor that helps you learn a real job by doing real work. Runs on your machine, led by Hoolio the owl. Built on Codex. MIT licensed.</p></div>
+          <div><p className="footer-wordmark">Journeyman</p><p className="muted">An AI mentor that helps you learn a real job by doing real work. Runs on your machine and features Hoolio, the Little AI Company owl. Built on Codex. MIT licensed.</p></div>
           <nav className="footer-nav" data-site-nav="footer" aria-label="Footer"><PageLinks current={current} showDeferred /></nav>
         </div>
         <div className="shell footer-meta"><span>A saved snapshot · nothing running behind it</span><span>Built for evidence, not theater.</span></div>
