@@ -1,0 +1,298 @@
+# Instincts generated from https://github.com/Jeff-Kazzee/journeyman
+# Generated: 2026-07-18T21:00:01.307Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: journeyman-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/Jeff-Kazzee/journeyman
+---
+
+# Journeyman Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: fix
+
+## Evidence
+
+- 1 commits analyzed
+- Detected conventional commit pattern
+- Examples: fix: plan schema rejected by OpenAI structured outputs (Codex passes 008-008b)
+
+---
+id: journeyman-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/Jeff-Kazzee/journeyman
+---
+
+# Journeyman Commit Length
+
+## Action
+
+Write moderate-length commit messages (~78 characters)
+
+## Evidence
+
+- Average commit message length: 78 chars
+- Based on 1 commits
+
+---
+id: journeyman-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Jeff-Kazzee/journeyman
+---
+
+# Journeyman Naming Files
+
+## Action
+
+Use kebab-case naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: kebab-case
+
+---
+id: journeyman-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/Jeff-Kazzee/journeyman
+---
+
+# Journeyman Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: journeyman-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/Jeff-Kazzee/journeyman
+---
+
+# Journeyman Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: journeyman-instinct-file-naming
+trigger: "When creating a new file"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: Jeff-Kazzee/journeyman
+---
+
+# Journeyman Instinct File Naming
+
+## Action
+
+Name the file using kebab-case
+
+## Evidence
+
+- Pattern in namingConventions.files
+
+---
+id: journeyman-instinct-function-naming
+trigger: "When defining a new function"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: Jeff-Kazzee/journeyman
+---
+
+# Journeyman Instinct Function Naming
+
+## Action
+
+Name the function using camelCase
+
+## Evidence
+
+- Pattern in namingConventions.functions
+
+---
+id: journeyman-instinct-class-naming
+trigger: "When defining a new class"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: Jeff-Kazzee/journeyman
+---
+
+# Journeyman Instinct Class Naming
+
+## Action
+
+Name the class using PascalCase
+
+## Evidence
+
+- Pattern in namingConventions.classes
+
+---
+id: journeyman-instinct-constant-naming
+trigger: "When declaring a constant"
+confidence: 0.9
+domain: code-style
+source: repo-analysis
+source_repo: Jeff-Kazzee/journeyman
+---
+
+# Journeyman Instinct Constant Naming
+
+## Action
+
+Name the constant using SCREAMING_SNAKE_CASE
+
+## Evidence
+
+- Pattern in namingConventions.constants
+
+---
+id: journeyman-instinct-import-style
+trigger: "When importing modules"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: Jeff-Kazzee/journeyman
+---
+
+# Journeyman Instinct Import Style
+
+## Action
+
+Use a mixed import style as appropriate for the context
+
+## Evidence
+
+- Pattern in importStyle
+
+---
+id: journeyman-instinct-export-style
+trigger: "When exporting modules or functions"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Jeff-Kazzee/journeyman
+---
+
+# Journeyman Instinct Export Style
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- Pattern in exportStyle
+
+---
+id: journeyman-instinct-error-handling
+trigger: "When handling errors in code"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: Jeff-Kazzee/journeyman
+---
+
+# Journeyman Instinct Error Handling
+
+## Action
+
+Use try-catch blocks for error handling
+
+## Evidence
+
+- Pattern in errorHandling.style
+
+---
+id: journeyman-instinct-commit-format
+trigger: "When writing a commit message"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: Jeff-Kazzee/journeyman
+---
+
+# Journeyman Instinct Commit Format
+
+## Action
+
+Use the conventional commit format with the 'fix' prefix for bug fixes
+
+## Evidence
+
+- Seen in commit: fix: plan schema rejected by OpenAI structured outputs (Codex passes 008-008b)
+- Pattern in commits.prefixes
+
+---
+id: journeyman-instinct-commit-length
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: Jeff-Kazzee/journeyman
+---
+
+# Journeyman Instinct Commit Length
+
+## Action
+
+Keep the commit message concise, around 78 characters on average
+
+## Evidence
+
+- Pattern in commits.averageLength
+
+---
+id: journeyman-instinct-test-location
+trigger: "When adding or updating tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: Jeff-Kazzee/journeyman
+---
+
+# Journeyman Instinct Test Location
+
+## Action
+
+Place test files in a separate directory from source files
+
+## Evidence
+
+- Pattern in architecture.folderStructure.testLocation
+
